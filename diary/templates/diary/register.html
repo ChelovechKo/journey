@@ -1,0 +1,62 @@
+{% extends "diary/layout.html" %}
+
+{% block body %}
+
+    <h2>Register</h2>
+
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+    <form action="{% url 'register' %}" method="post">
+        {% csrf_token %}
+        <!-- field for avatar upload -->
+        <input type="file" id="avatar" name="avatar"/>
+        <input type="hidden" id="avatar_path" name="avatar" />
+
+        <div class="form-group">
+            <input class="form-control" autofocus type="text" name="username" placeholder="Username">
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="email" name="email" placeholder="Email Address">
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="password" name="password" placeholder="Password">
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
+        </div>
+        <input class="btn btn-primary" type="submit" value="Register">
+    </form>
+
+    Already have an account? <a href="{% url 'login' %}">Log In here.</a>
+
+    <!-- FilePond JS -->
+    <script src="https://unpkg.com/filepond/dist/filepond.min.js"></script>
+    <script>
+        FilePond.setOptions({
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'  // Вставка CSRF-токена из контекста Django
+            }
+        });
+
+        // Create FilePond for input
+        const pond = FilePond.create(document.querySelector('#avatar'), {
+            allowImagePreview: true,
+            imagePreviewMaxHeight: 150,
+            server: {
+                process: {
+                    url: '/upload-avatar/',
+                    onload: (response) => {
+                        const result = JSON.parse(response);
+                        if (result.status === "success") {
+                            document.querySelector('#avatar_path').value = result.file_path;
+                        }
+                    }
+                },
+                revert: null, // disable delete
+            },
+        });
+    </script>
+
+{% endblock %}
