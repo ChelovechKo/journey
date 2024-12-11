@@ -41,6 +41,9 @@ def register(request):
     if request.method == "POST":
         username = request.POST["username"]
         email = request.POST["email"]
+        avatar = request.FILES.get("avatar")
+        selected_icon = request.POST.get("selectedIconInput", "fa fa-cat")
+        selected_color = request.POST.get("selectedColorInput", "#6c757d")
 
         # Ensure password matches confirmation
         password = request.POST["password"]
@@ -50,12 +53,13 @@ def register(request):
                 "message": "Passwords must match."
             })
 
-        avatar_path = request.POST.get("avatar", None)
         # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
-            if avatar_path:
-                user.avatar = avatar_path
+            if avatar:
+                user.avatar = avatar
+            user.selected_icon = selected_icon
+            user.selected_color = selected_color
             user.save()
         except IntegrityError:
             return render(request, "diary/register.html", {
@@ -69,8 +73,8 @@ def register(request):
 
 def upload_avatar(request):
     '''For uploading an image as avatar'''
-    if request.method == 'POST' and request.FILES.get('file'):
-        uploaded_file = request.FILES['file']
+    if request.method == 'POST':
+        uploaded_file = request.FILES['avatar']
         file_path = default_storage.save(f'avatars/{uploaded_file.name}', uploaded_file)
         return JsonResponse({'status': 'success', 'file_path': f'/media/{file_path}'})
     return JsonResponse({'status': 'error', 'message': 'No file uploaded'}, status=400)
