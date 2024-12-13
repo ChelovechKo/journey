@@ -1,3 +1,20 @@
+// Add and Edit Point on the User's Map
+function myPlaces(){
+    const map = L.map("map").setView([51.505, -0.09], 2);  // Init Map
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const placesData = document.getElementById("places-data").textContent;
+    const places = JSON.parse(placesData);  // Parse JSON
+
+    places.forEach(place => {
+        L.marker([place.latitude, place.longitude]).addTo(map)
+            .bindPopup(`<b>${place.name}</b><br>${place.country}, ${place.city}`);
+    });
+}
+
 // reset selection
 function resetSelection(elements, className) {
     elements.forEach(el => el.classList.remove(className));
@@ -59,6 +76,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const avatarIcon = document.getElementById("avatarIcon");
     const avatarPreview = document.getElementById("avatarPreview"); // avatar
 
+    const currentUrl = window.location.href; // current page url
+
     // color click Handle
     if(colorIcons){
         colorIcons.forEach(color => {color.addEventListener("click", () => {updateAvatarColor(color, avatarIcon);});});
@@ -70,5 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // preview click Handle
     if (avatarInput){
         avatarInput.addEventListener('change', function () {updateAvatarImage(this, avatarPreview);});
+    }
+
+    if (currentUrl.includes('my-places')) {
+        myPlaces();
     }
 });

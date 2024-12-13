@@ -10,3 +10,19 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+class Place(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places")
+    name = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    altitude = models.FloatField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    datetime = models.DateTimeField(null=True, blank=True)
+    is_visited = models.BooleanField(default=False)
+    category = models.CharField(max_length=50, default='default')  # marker icon
+
+    def __str__(self):
+        return f"{self.name} - {self.category}"

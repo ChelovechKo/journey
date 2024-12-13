@@ -6,8 +6,10 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.core.files.storage import default_storage
+from django.utils import timezone
+import json
 
-from .models import User
+from .models import User, Place
 
 
 def index(request):
@@ -140,3 +142,12 @@ def profile(request):
         return redirect("profile") # Redirect after successful update
 
     return render(request, "diary/profile.html", {"user": user})
+
+@login_required
+def my_places(request):
+    '''Save User Places'''
+    places = Place.objects.all()  # Получаем все места
+    places_list = list(places.values("name", "latitude", "longitude", "country", "city"))  # Сериализуем данные
+    places_json = json.dumps(places_list)  # Преобразуем в JSON
+
+    return render(request, "diary/my_places.html", {"places": places_json})

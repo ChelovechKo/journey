@@ -11,6 +11,7 @@ urlpatterns = [
     path("register", views.register, name="register"),
     path("upload-avatar/", views.upload_avatar, name='upload-avatar'),
     path("profile/", views.profile, name="profile"),
+    path("my-places/", views.my_places, name="my-places"),
 ]
 
 if settings.DEBUG:
