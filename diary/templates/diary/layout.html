@@ -38,34 +38,40 @@
 
                         {% if user.is_authenticated %}
                             <!-- if user is auth -->
-                            <li class="nav-item">
-                                {% if user.avatar %}
-                                    <!-- Users's avatar -->
-                                    <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle"
-                                         style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
-                                {% elif user.selected_icon %}
-                                    <i class="{{ user.selected_icon }} fa-2x" style="color: {{ user.selected_color }}; margin-right: 10px;"></i>
-                                {% else %}
-                                    <i class="fa fa-user-circle fa-2x text-secondary" style="margin-right: 10px;"></i>
-                                {% endif %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {% if user.avatar %}
+                                        <!-- Users's avatar -->
+                                        <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle"
+                                             style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                                    {% elif user.selected_icon %}
+                                        <i class="{{ user.selected_icon }} fa-2x" style="color: {{ user.selected_color }}; margin-right: 10px;"></i>
+                                    {% else %}
+                                        <i class="fa fa-user-circle fa-2x text-secondary" style="margin-right: 10px;"></i>
+                                    {% endif %}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><a class="dropdown-item" href="#">My Places</a></li>
+                                    <li><a class="dropdown-item" href="#">My Routes</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Log Out</a></li>
+                                </ul>
                             </li>
                             <li class="nav-item">
                                 <span class="navbar-text me-3">
                                     {{ user.username }}
                                 </span>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link btn btn-outline-info" href="{% url 'logout' %}">Log Out</a>
-                            </li>
 
                         {% else %}
 
                             <!-- if user is not auth -->
                             <li class="nav-item">
-                                <a class="nav-link btn btn-outline-success me-2" href="{% url 'login' %}">Log In</a>
+                                <a class="nav-link btn me-2" href="{% url 'login' %}">Log In</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link btn btn-primary" href="{% url 'register' %}">Sign Up</a>
+                                <a class="nav-link btn" href="{% url 'register' %}">Sign Up</a>
                             </li>
 
                         {% endif %}
@@ -74,7 +80,7 @@
             </div>
           </nav>
         
-        <div class="body">
+        <div class="body mx-5 my-3">
             {% block body %}
             {% endblock %}
         </div>

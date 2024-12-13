@@ -1,73 +1,81 @@
 {% extends "diary/layout.html" %}
 
 {% block body %}
+<h2>Register</h2>
 
-    <h2>Register</h2>
-
+<div class="container mt-4">
+    <hr>
     {% if message %}
         <div>{{ message }}</div>
     {% endif %}
 
-    <form id="reg-form" action="{% url 'register' %}" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+    <h5>Avatar</h5>
+    <div class="mb-2">
+        <form id="reg-form" action="{% url 'register' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        <!-- hidden for save icon -->
-        <input type="hidden" id="selectedIconInput" name="selectedIconInput" value="fa fa-cat">
-        <input type="hidden" id="selectedColorInput" name="selectedColorInput" value="#6c757d">
+            <!-- hidden for save icon -->
+            <input type="hidden" id="selectedIconInput" name="selectedIconInput" value="fa fa-cat">
+            <input type="hidden" id="selectedColorInput" name="selectedColorInput" value="#6c757d">
 
-        <!-- field for avatar upload -->
-        <div class="avatar-section">
-            <div class="avatar-upload">
-                <input type="file" id="avatarInput" name="avatar" style="display: none;" accept="image/*">
-                <label for="avatarInput" class="avatar-circle">
-                    <img id="avatarPreview" src="" alt="Avatar Preview" style="display: none;">
-                    <i class="fa fa-cat" id="avatarIcon"></i>
-                    <div class="camera-icon">
-                        <i class="fa fa-camera"></i>
+            <!-- field for avatar upload -->
+            <div class="avatar-section">
+                <div class="avatar-upload">
+                    <input type="file" id="avatarInput" name="avatar" style="display: none;" accept="image/*">
+                    <label for="avatarInput" class="avatar-circle">
+                        <img id="avatarPreview" src="" alt="Avatar Preview" style="display: none;">
+                        <i class="fa fa-cat" id="avatarIcon"></i>
+                        <div class="camera-icon">
+                            <i class="fa fa-camera"></i>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="icons-grid">
+                    <!-- Colors -->
+                    <div class="color-icons">
+                        <div class="color-icon selected-color" data-color="#6c757d" style="background-color: #6c757d;"></div>
+                        <div class="color-icon" data-color="#007bff" style="background-color: #007bff;"></div>
+                        <div class="color-icon" data-color="#28a745" style="background-color: #28a745;"></div>
+                        <div class="color-icon" data-color="#ffc107" style="background-color: #ffc107;"></div>
+                        <div class="color-icon" data-color="#dc3545" style="background-color: #dc3545;"></div>
                     </div>
-                </label>
-            </div>
 
-            <div class="icons-grid">
-                <!-- Colors -->
-                <div class="color-icons">
-                    <div class="color-icon selected-color" data-color="#6c757d" style="background-color: #6c757d;"></div>
-                    <div class="color-icon" data-color="#007bff" style="background-color: #007bff;"></div>
-                    <div class="color-icon" data-color="#28a745" style="background-color: #28a745;"></div>
-                    <div class="color-icon" data-color="#ffc107" style="background-color: #ffc107;"></div>
-                    <div class="color-icon" data-color="#dc3545" style="background-color: #dc3545;"></div>
-                </div>
-
-                <!-- Animals -->
-                <div class="animal-icons">
-                    <div class="animal-icon selected-icon" data-animal="fa fa-cat"><i class="fa fa-cat"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-dog"><i class="fa fa-dog"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-fish"><i class="fa fa-fish"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-hippo"><i class="fa fa-hippo"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-horse"><i class="fa fa-horse"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-crow"><i class="fa fa-crow"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-frog"><i class="fa fa-frog"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-spider"><i class="fa fa-spider"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-bug"><i class="fa fa-bug"></i></div>
-                    <div class="animal-icon" data-animal="fa fa-dove"><i class="fa fa-dove"></i></div>
+                    <!-- Animals -->
+                    <div class="animal-icons">
+                        <div class="animal-icon selected-icon" data-animal="fa fa-cat"><i class="fa fa-cat"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-dog"><i class="fa fa-dog"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-fish"><i class="fa fa-fish"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-hippo"><i class="fa fa-hippo"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-horse"><i class="fa fa-horse"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-crow"><i class="fa fa-crow"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-frog"><i class="fa fa-frog"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-spider"><i class="fa fa-spider"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-bug"><i class="fa fa-bug"></i></div>
+                        <div class="animal-icon" data-animal="fa fa-dove"><i class="fa fa-dove"></i></div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="mb-3">
-            <input class="form-control" autofocus type="text" name="username" placeholder="Username">
-        </div>
-        <div class="mb-3">
-            <input class="form-control" type="email" name="email" placeholder="Email Address">
-        </div>
-        <div class="mb-3">
-            <input class="form-control" type="password" name="password" placeholder="Password">
-        </div>
-        <div class="mb-3">
-            <input class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
-        </div>
-        <input class="btn btn-primary" type="submit" value="Register">
-    </form>
+            <hr>
+
+            <div class="mb-3">
+                <input class="form-control" autofocus type="text" name="username" placeholder="Username">
+            </div>
+            <div class="mb-3">
+                <input class="form-control" type="email" name="email" placeholder="Email Address">
+            </div>
+            <div class="mb-3">
+                <input class="form-control" type="password" name="password" placeholder="Password">
+            </div>
+            <div class="mb-3">
+                <input class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
+            </div>
+            <hr>
+            <input class="btn btn-primary" type="submit" value="Register">
+        </form>
+    </div>
 
     Already have an account? <a href="{% url 'login' %}">Log In here.</a>
+</div>
 {% endblock %}
