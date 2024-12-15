@@ -1,3 +1,162 @@
+const markers = [];
+
+// location determination
+function locateUser(map) {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+
+                // Smoothly zooms to your current location
+                map.flyTo([userLat, userLng], 13, {
+                    duration: 2, // Animation duration
+                    easeLinearity: 0.25 // Smoothness of animation
+                });
+            }, function () {
+            }
+        );
+    }
+}
+
+//Get uniq categories
+async function getCategories() {
+    const overpassUrl = "https://overpass-api.de/api/interpreter"; // Overpass API URL
+
+    const query = `
+    [out:json];
+    (
+      node["amenity"](51.5,-0.2,51.6,-0.1);
+      node["leisure"](51.5,-0.2,51.6,-0.1);
+      node["natural"](51.5,-0.2,51.6,-0.1);
+      node["historic"](51.5,-0.2,51.6,-0.1);
+    );
+    out body;`;
+
+    try {
+        const response = await fetch(overpassUrl, {
+            method: "POST",
+            body: query,
+            headers: { "Content-Type": "text/plain" }
+        });
+
+        const data = await response.json();
+        const elements = data.elements;
+
+        // Collect unique categories from tags
+        const categories = {};
+        const excludedCategories = ["note", "name", "capacity", "operator", "opening_hours", "ref", "phone"]; // Categories for excluded
+
+        elements.forEach(el => {
+            const keys = Object.keys(el.tags);
+            keys.forEach(key => {
+                if (!excludedCategories.includes(key) && !key.includes("recycling") && !key.includes("currency") && !key.includes("wikidata") && !key.includes("addr") && !key.includes("fhrs") && !key.includes("payment")) { // for excluded
+                    if (!categories[key]) categories[key] = new Set();
+                    categories[key].add(el.tags[key]);
+                }
+            });
+        });
+
+        // Save to categoryList
+        const categoryList = Object.keys(categories);
+        return categoryList;
+    } catch (err) {
+        console.error("Error while receiving data:", err);
+        return [];
+    }
+}
+
+// Checkbox Handle
+function handleCheckboxChange(map) {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="category-"]');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+            updateMapWithOSMData(map); // Обновляем маркеры на карте
+        });
+    });
+}
+
+function collectCategoriesFromHTML() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="category-"]');
+    return Array.from(checkboxes).filter(checkbox => checkbox.checked).map(checkbox => {
+        const categoryId = checkbox.id.replace("category-", "");
+        const parts = categoryId.split(":");
+        return {
+            key: parts[0],
+            value: parts[1]
+        };
+    });
+}
+
+async function fetchPlacesFromOSM(categories, bounds) {
+    const overpassUrl = "https://overpass-api.de/api/interpreter";
+    // Visible bounds
+    const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+
+    // Active Categories
+    const activeCategories = categories.filter(category => {
+        const checkbox = document.getElementById(`category-${category.key}:${category.value}`);
+        return checkbox && checkbox.checked;
+    });
+
+    if (activeCategories.length === 0) {
+        console.warn("No active categories selected.");
+        return [];
+    }
+
+    // Create query
+    const categoryQueries = activeCategories.map(category => {
+        return `node["${category.key}"="${category.value}"](${bbox});`;
+    }).join("\n");
+
+    const query = `
+        [out:json];
+        (
+          ${categoryQueries}
+        );
+        out body;
+    `;
+
+    try {
+        const response = await fetch(overpassUrl, {
+            method: "POST",
+            body: query,
+            headers: { "Content-Type": "text/plain" }
+        });
+
+        const data = await response.json();
+        return data.elements.map(el => ({
+            id: el.id,
+            lat: el.lat,
+            lng: el.lon,
+            name: el.tags.name || "Unnamed Location",
+            category: el.tags
+        }));
+    } catch (err) {
+        console.error("Error fetching data from Overpass API:", err);
+        return [];
+    }
+}
+
+function updateMapWithOSMData(map) {
+    const categories = collectCategoriesFromHTML(); // Collect categories from checkboxes
+    const bounds = map.getBounds(); // get current bounds
+
+    fetchPlacesFromOSM(categories, bounds).then(places => {
+        // reset old markers
+        markers.forEach(marker => map.removeLayer(marker));
+        markers.length = 0;
+
+        // add new markers
+        places.forEach(place => {
+            const marker = L.marker([place.lat, place.lng], { id: place.category.key });
+            marker.bindPopup(`<b>${place.name}</b><br>Category: ${place.category}`);
+            marker.addTo(map);
+            markers.push(marker);
+        });
+    });
+}
+
 // Add and Edit Point on the User's Map
 function myPlaces(){
     const map = L.map("map").setView([51.505, -0.09], 2);  // Init Map
@@ -6,13 +165,30 @@ function myPlaces(){
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    const placesData = document.getElementById("places-data").textContent;
-    const places = JSON.parse(placesData);  // Parse JSON
+    locateUser(map); // user location determination
+    updateMapWithOSMData(map); // init markers
 
-    places.forEach(place => {
-        L.marker([place.latitude, place.longitude]).addTo(map)
-            .bindPopup(`<b>${place.name}</b><br>${place.country}, ${place.city}`);
+    // Checkbox Handle
+    handleCheckboxChange(map);
+
+    // Map Handle
+    map.on("moveend", () => {
+        updateMapWithOSMData(map);
     });
+
+    // get Categories
+    /*getCategories()
+        .then(categoryList => {
+            console.log(categoryList);
+
+            // Generate checkbox
+            //generateCheckboxes(categoryList);
+        })
+        .catch(err => {
+            console.error("Error while receiving categories:", err);
+        });
+    */
+    //generateCheckboxes(categoryList); // Generate checkbox
 }
 
 // reset selection

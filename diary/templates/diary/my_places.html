@@ -1,11 +1,76 @@
 {% extends "diary/layout.html" %}
 {% block body %}
-<div class="container mt-4">
+<div class="container-fluid mt-3">
     <h2>My Places</h2>
     <hr>
 
-    <!-- Map -->
-    <div id="map" style="height: 500px;"></div>
+    <!-- Map and Legend -->
+    <div class="map-container">
+        <!-- Map -->
+        <div id="map" style="width: 75%; height: 600px;"></div>
+    
+        <!-- Legend with checkbox -->
+        <div class="map-legend">
+            <!-- My Places -->
+            <div class="legend-group">
+                <h5>My Places</h5>
+                <div class="checkbox-container">
+                    <label><input type="checkbox" id="visited"> Visited</label>
+                    <label><input type="checkbox" id="planned"> Planned</label>
+                    <label><input type="checkbox" id="favorites"> Favorites</label>
+                </div>
+            </div>
+        <!-- Natural objects -->
+        <div class="legend-group">
+            <h5>Natural objects</h5>
+            <div class="checkbox-container">
+                <label><input type="checkbox" id="category-natural:water"> Water</label>
+                <label><input type="checkbox" id="category-natural:wood"> Wood</label>
+                <label><input type="checkbox" id="category-natural:peak"> Peak</label>
+                <label><input type="checkbox" id="category-natural:beach"> Beach</label>
+            </div>
+        </div>
+        
+        <!-- Commercial and public places -->
+        <div class="legend-group">
+            <h5>Commercial and public places</h5>
+            <div class="checkbox-container">
+                <label><input type="checkbox" id="category-amenity:restaurant"> Restaurant</label>
+                <label><input type="checkbox" id="category-amenity:cafe"> Cafe</label>
+                <label><input type="checkbox" id="category-amenity:bank"> Bank</label>
+                <label><input type="checkbox" id="category-amenity:parking"> Parking</label>
+                <label><input type="checkbox" id="category-amenity:hospital"> Hospital</label>
+                <label><input type="checkbox" id="category-amenity:supermarket"> Supermarket</label>
+                <label><input type="checkbox" id="category-amenity:bakery"> Bakery</label>
+                <label><input type="checkbox" id="category-tourism:hotel"> Hotel</label>
+            </div>
+        </div>
+        
+        <!-- Historical sites -->
+        <div class="legend-group">
+            <h5>Historical sites</h5>
+            <div class="checkbox-container">
+                <label><input type="checkbox" id="category-historic:castle"> Castle</label>
+                <label><input type="checkbox" id="category-historic:monument"> Monument</label>
+                <label><input type="checkbox" id="category-historic:ruins"> Ruins</label>
+            </div>
+        </div>
+        
+        <!-- Entertainment and recreation -->
+        <div class="legend-group">
+            <h5>Entertainment and recreation</h5>
+            <div class="checkbox-container">
+                <label><input type="checkbox" id="category-leisure:park"> Park</label>
+                <label><input type="checkbox" id="category-leisure:stadium"> Stadium</label>
+                <label><input type="checkbox" id="category-leisure:playground"> Playground</label>
+                <label><input type="checkbox" id="category-tourism:museum"> Museum</label>
+                <label><input type="checkbox" id="category-tourism:attraction"> Attraction</label>
+            </div>
+        </div>
+
+            
+        </div>
+    </div>
 
     <!-- JSON place's data -->
     <script id="places-data" type="application/json">
