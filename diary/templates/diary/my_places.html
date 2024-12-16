@@ -1,61 +1,71 @@
 {% extends "diary/layout.html" %}
 {% block body %}
-<div class="container-fluid mt-3">
+<div>
     <h2>My Places</h2>
     <hr>
 
     <!-- Map and Legend -->
-    <div class="container-fluid p-3">
-        <div class="row">
-            <!-- Map -->
-            <div class="col-md-9 col-12" id="map-container">
-                <div id="map" style="width: 100%; height: 600px;">
-                    <button id="legend-toggle-btn" class="btn btn-outline-secondary btn-sm">
-                        <i class="fa fa-chevron-right"></i>
-                    </button>
-                </div>
+    <div class="route-map-legend row g-0">
+        <!-- Planning route -->
+        <div class="col-md-2 col-12 bg-light p-3 map-legend" id="create-route">
+            <div class="legend-group">
+                <h5>Create your route</h5>
             </div>
-        
-            <!-- Map Legend (Sidebar) -->
-            <div class="col-md-3 col-12 bg-light p-3 map-legend" id="map-legend">
-           
-                <!-- My Places -->
-                <div class="legend-group">
-                    <h5>My Places</h5>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="visited">
-                        <label class="form-check-label" for="visited">Visited</label>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="planned">
-                        <label class="form-check-label" for="planned">Planned</label>
-                    </div>
-                </div>
-    
-                <!-- Categories -->
-                {% for category in categories %}
-                    <div class="legend-group mt-3">
-                        <h5>{{ category.category }}</h5>
-                        <div class="row">
-                            {% for subcategory in category.subcategories.all %}
-                                <div class="col-6">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input"
-                                               id="category-{{ subcategory.key }}:{{ subcategory.value }}">
-                                        <label class="form-check-label"
-                                               for="category-{{ subcategory.key }}:{{ subcategory.value }}">
-                                            {{ subcategory.value|capfirst }}
-                                        </label>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-         </div>
-    </div>
+        </div>
 
+        <!-- Map -->
+        <div class="col-md-7 col-12" id="map-container">
+            <div id="map">
+                <button id="legend-toggle-btn" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Map Legend (Sidebar) -->
+        <div class="col-md-3 col-12 bg-light p-3 map-legend" id="map-legend">
+
+            <!-- My Places -->
+            <div class="legend-group mt-3">
+                <h5>My Places</h5>
+                 <div class="row">
+                     <div class="col-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="visited">
+                            <label class="form-check-label" for="visited">Visited</label>
+                        </div>
+                     </div>
+                     <div class="col-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="planned">
+                            <label class="form-check-label" for="planned">Planned</label>
+                        </div>
+                     </div>
+                 </div>
+            </div>
+
+            <!-- Categories -->
+            {% for category in categories %}
+                <div class="legend-group mt-3">
+                    <h5>{{ category.category }}</h5>
+                    <div class="row">
+                        {% for subcategory in category.subcategories.all %}
+                            <div class="col-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input"
+                                           id="category-{{ subcategory.key }}:{{ subcategory.value }}">
+                                    <label class="form-check-label"
+                                           for="category-{{ subcategory.key }}:{{ subcategory.value }}">
+                                        {{ subcategory.value|capfirst }}
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+     </div>
 
     <!-- Detail Place Info -->
     <div id="place-info" class="mt-4">

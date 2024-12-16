@@ -142,23 +142,24 @@
 
 /* Map and Legend */
 /* Common block */
-.map-container {
+.route-map-legend{
     display: flex;
-    gap: 20px;
+    align-items: stretch;
+}
+
+/* Map */
+#map-container {
+    display: flex;
 }
 
 /* Legend */
 .map-legend {
-    width: 25%;
     display: flex;
     flex-direction: column;
-    gap: 5px;
     border: 1px solid #ccc;
-    border-radius: 8px;
     padding: 15px;
     background-color: #f9f9f9;
     overflow-y: auto;
-    max-height: 600px; /* Scroll Height */
 }
 
 /* Groups in Legend */
@@ -177,7 +178,6 @@
 .legend-group .checkbox-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
 }
 
 /* Checkbox */
@@ -205,7 +205,6 @@
 
 #map {
     width: 100%;
-    height: 600px;
     transition: width 0.3s ease-in-out;
 }
 
