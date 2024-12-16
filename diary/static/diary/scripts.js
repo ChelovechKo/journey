@@ -4,6 +4,13 @@ function myPlaces(){
     const markers = [];
     const categoryIcons = {};
     const categoriesData = JSON.parse(document.getElementById("categories-data").textContent);
+    const LegendToggleBtn = document.getElementById('legend-toggle-btn');
+    const mapLegend = document.getElementById('map-legend');
+    const mapContainer = document.getElementById('map-container');
+    const mapElement = document.getElementById('map');
+
+    let isLegendVisible = true;
+    let hideTimeout;
 
     // location determination
     function locateUser() {
@@ -59,7 +66,6 @@ function myPlaces(){
         });
 
         if (activeCategories.length === 0) {
-            console.warn("No active categories selected.");
             return [];
         }
 
@@ -121,6 +127,48 @@ function myPlaces(){
         });
     }
 
+    // Show ToggleLegendBtn
+    function showToggleLegendBtn() {
+        LegendToggleBtn.style.visibility = "visible";
+        LegendToggleBtn.style.opacity = "1";
+        clearTimeout(hideTimeout); // Clean Timer
+    }
+
+    // Hide ToggleLegendBtn
+    function hideToggleLegendBtn() {
+        if(isLegendVisible){
+            hideTimeout = setTimeout(() => {
+                LegendToggleBtn.style.opacity = "0";
+                LegendToggleBtn.style.visibility = "hidden";
+            }, 500);
+        }
+    }
+
+    //Hide/Show Map Legend Handle
+    function hideShowMapLegend(){
+        if (isLegendVisible) {
+            // Hide Legend
+            mapLegend.classList.add('hidden');
+            LegendToggleBtn.querySelector('i').classList.remove('fa-chevron-right');
+            LegendToggleBtn.querySelector('i').classList.add('fa-chevron-left');
+            mapContainer.classList.remove('col-md-9');
+            mapContainer.classList.add('col-md-12');
+        } else {
+            // Show Legend
+            mapLegend.classList.remove('hidden');
+            LegendToggleBtn.querySelector('i').classList.remove('fa-chevron-left');
+            LegendToggleBtn.querySelector('i').classList.add('fa-chevron-right');
+            mapContainer.classList.remove('col-md-12');
+            mapContainer.classList.add('col-md-9');
+        }
+
+        isLegendVisible = !isLegendVisible;
+
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
+    }
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -141,9 +189,17 @@ function myPlaces(){
     handleCheckboxChange();
 
     // Map Handle
-    map.on("moveend", () => {
-        updateMapWithOSMData();
-    });
+    map.on("moveend", () => {updateMapWithOSMData();});
+
+    // Hide/Show ToggleLegendBtn
+    mapLegend.addEventListener("mouseenter", showToggleLegendBtn);
+    mapLegend.addEventListener("mouseleave", hideToggleLegendBtn);
+
+    // Hide/Show Map Legend Handle
+    LegendToggleBtn.addEventListener("mouseenter", showToggleLegendBtn);
+    LegendToggleBtn.addEventListener("mouseleave", hideToggleLegendBtn);
+
+    LegendToggleBtn.addEventListener('click', hideShowMapLegend);
 }
 
 // Changing Avatar's icon. Page Register and Profile
