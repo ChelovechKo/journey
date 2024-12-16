@@ -1,3 +1,5 @@
+from enum import unique
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -12,6 +14,7 @@ class User(AbstractUser):
         return self.username
 
 class Place(models.Model):
+    '''User's point on the map'''
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places")
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
@@ -26,3 +29,23 @@ class Place(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.category}"
+
+class MarkerCategory(models.Model):
+    '''Dictionary of Marker's Categories'''
+    id = models.AutoField(primary_key=True)
+    category = models.CharField(max_length=100, unique=True)  # Name of Category (ex, 'Commercial and public places')
+
+    def __str__(self):
+        return self.category
+
+class MarkerSubCategory(models.Model):
+    '''Dictionary of Marker's Sub Categories'''
+    id = models.AutoField(primary_key=True)
+    category = models.ForeignKey(MarkerCategory, on_delete=models.CASCADE, related_name='subcategories')
+    key = models.CharField(max_length=50)  # Key for Overpass API (ex, 'amenity')
+    value = models.CharField(max_length=50)  # Value for Overpass API (ex, 'hotel')
+    icon = models.CharField(max_length=50)  # Icon for marker (ex, 'hotel', 'tree')
+    marker_color = models.CharField(max_length=20, default='blue')  # Color for marker (ex, 'red', 'blue')
+
+    def __str__(self):
+        return f"{self.category.category} - {self.key}:{self.value}"

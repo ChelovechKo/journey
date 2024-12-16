@@ -11,11 +11,9 @@
 
         <!-- leaflet.js for Map-->
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-        <script>
-            const currentUser = "{% if user.is_authenticated %}{{ user.username }}{% else %}null{% endif %}";
-        </script>
-        <script src="{% static 'diary/scripts.js' %}"></script>
-
+        <!-- Leaflet Awesome Markers CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -93,5 +91,12 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
         <!-- leaflet.js for Map-->
         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <!-- Leaflet Awesome Markers JS -->
+        <script src="https://cdn.jsdelivr.net/npm/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.min.js"></script>
+    
+        <script>
+            const currentUser = "{% if user.is_authenticated %}{{ user.username }}{% else %}null{% endif %}";
+        </script>
+        <script src="{% static 'diary/scripts.js' %}"></script>
     </body>
 </html>

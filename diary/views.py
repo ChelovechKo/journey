@@ -9,7 +9,7 @@ from django.core.files.storage import default_storage
 from django.utils import timezone
 import json
 
-from .models import User, Place
+from .models import User, Place, MarkerSubCategory, MarkerCategory
 
 
 def index(request):
@@ -146,8 +146,17 @@ def profile(request):
 @login_required
 def my_places(request):
     '''Save User Places'''
-    places = Place.objects.all()  # Получаем все места
-    places_list = list(places.values("name", "latitude", "longitude", "country", "city"))  # Сериализуем данные
-    places_json = json.dumps(places_list)  # Преобразуем в JSON
+    places = Place.objects.all()  # Get all places
+    places_list = list(places.values("name", "latitude", "longitude", "country", "city"))
+    places_json = json.dumps(places_list)
 
-    return render(request, "diary/my_places.html", {"places": places_json})
+    categories = MarkerCategory.objects.all()
+    subCategories = MarkerSubCategory.objects.all()
+
+    categories_data = list(MarkerSubCategory.objects.values("value", "icon", "marker_color"))
+    return render(request, "diary/my_places.html", {
+        "places": places_json,
+        "categories": categories,
+        "subCategories": subCategories,
+        "categories_data": json.dumps(categories_data)
+    })
