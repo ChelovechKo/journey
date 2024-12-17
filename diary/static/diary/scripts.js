@@ -12,6 +12,42 @@ function myPlaces(){
     let isLegendVisible = true;
     let hideTimeout;
 
+    // Find missing data
+    async function reverseGeocode(lat, lng) {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            return {
+                country: data.address.country || "",
+                city: data.address.city || data.address.town || ""
+            };
+        } catch (err) {
+            console.error("Error in reverse geocoding:", err);
+            return { country: "N/A", city: "N/A" };
+        }
+    }
+    // If Marker Click Handle than show details
+    function displayPlaceInfo(place) {
+        const detailBlock = document.getElementById("detail-place-info");
+
+        // Fill detailBlock
+        reverseGeocode(place.lat, place.lng).then(location => {
+            document.getElementById("country").value = place.category.country || location.country;
+            document.getElementById("city").value = place.category.city || location.city;
+
+        });
+        document.getElementById("place-name").value = place.name || "";
+        document.getElementById("latitude").value = place.lat || "";
+        document.getElementById("longitude").value = place.lng || "";
+        document.getElementById("altitude").value = place.category.altitude || "";
+        document.getElementById("datetime").value = new Date().toLocaleString();
+        document.getElementById("description").value = "";
+
+        // Show detailBlock
+        detailBlock.style.display = "block";
+    }
+
     // location determination
     function locateUser() {
         if ("geolocation" in navigator) {
@@ -58,13 +94,11 @@ function myPlaces(){
         const overpassUrl = "https://overpass-api.de/api/interpreter";
         // Visible bounds
         const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
-
         // Active Categories
         const activeCategories = categories.filter(category => {
             const checkbox = document.getElementById(`category-${category.key}:${category.value}`);
             return checkbox && checkbox.checked;
         });
-
         if (activeCategories.length === 0) {
             return [];
         }
@@ -95,6 +129,8 @@ function myPlaces(){
                 lat: el.lat,
                 lng: el.lon,
                 name: el.tags.name || "Unnamed Location",
+                country: el.tags["addr:country"] || "N/A",
+                city: el.tags["addr:city"] || "N/A",
                 category: el.tags
             }));
         } catch (err) {
@@ -120,7 +156,12 @@ function myPlaces(){
                 const icon = categoryIcons[place.category[categoryKey]] || L.AwesomeMarkers.icon({ prefix: 'fa', icon: 'map-marker', markerColor: 'gray' });
                 const marker = L.marker([place.lat, place.lng], {icon: icon, id: place.category[categoryKey] });
 
-                marker.bindPopup(`<b>${place.name}</b><br>Category: ${place.category[categoryKey]}`);
+                // Adding a hover tooltip
+                marker.bindTooltip(place.name, {permanent: false, direction: "top", offset: [0, -10] });
+
+                // Marker Click Handle
+                marker.on('click', () => {displayPlaceInfo(place);});
+
                 marker.addTo(map);
                 markers.push(marker);
             });
@@ -291,6 +332,14 @@ function avatarEditing(){
 // main
 document.addEventListener('DOMContentLoaded', function() {
     const currentUrl = window.location.href; // current page url
+
+    /*
+    // Init ALL tooltip
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    */
 
     if(currentUrl.includes('profile') || currentUrl.includes('register')){
         avatarEditing();

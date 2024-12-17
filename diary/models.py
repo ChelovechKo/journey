@@ -15,6 +15,7 @@ class User(AbstractUser):
 
 class Place(models.Model):
     '''User's point on the map'''
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places")
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
