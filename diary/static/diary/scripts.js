@@ -6,8 +6,6 @@ function myPlaces(){
     const categoriesData = JSON.parse(document.getElementById("categories-data").textContent);
     const LegendToggleBtn = document.getElementById('legend-toggle-btn');
     const mapLegend = document.getElementById('map-legend');
-    const mapContainer = document.getElementById('map-container');
-    const mapElement = document.getElementById('map');
 
     let isLegendVisible = true;
     let hideTimeout;
@@ -246,20 +244,17 @@ function myPlaces(){
 
     //Hide/Show Map Legend Handle
     function hideShowMapLegend(){
+        const mapContainer = document.getElementById('map-container');
         if (isLegendVisible) {
             // Hide Legend
             mapLegend.classList.add('hidden');
-            LegendToggleBtn.querySelector('i').classList.remove('fa-chevron-right');
-            LegendToggleBtn.querySelector('i').classList.add('fa-chevron-left');
-            mapContainer.classList.remove('col-md-9');
-            mapContainer.classList.add('col-md-12');
+            LegendToggleBtn.querySelector('i').classList.replace('fa-chevron-right', 'fa-chevron-left');
+            mapContainer.classList.replace('col-md-8', 'col-md-10');
         } else {
             // Show Legend
             mapLegend.classList.remove('hidden');
-            LegendToggleBtn.querySelector('i').classList.remove('fa-chevron-left');
-            LegendToggleBtn.querySelector('i').classList.add('fa-chevron-right');
-            mapContainer.classList.remove('col-md-12');
-            mapContainer.classList.add('col-md-9');
+            LegendToggleBtn.querySelector('i').classList.replace('fa-chevron-left', 'fa-chevron-right');
+            mapContainer.classList.replace('col-md-10', 'col-md-8');
         }
 
         isLegendVisible = !isLegendVisible;
