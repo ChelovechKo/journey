@@ -152,8 +152,7 @@
     display: flex;
 }
 
-/* Legend */
-.map-legend {
+.sidebar{
     display: flex;
     flex-direction: column;
     border: 1px solid #ccc;
@@ -162,12 +161,17 @@
     overflow-y: auto;
 }
 
+/* Legend */
+.legend {
+
+}
+
 /* Groups in Legend */
-.legend-group {
+.sidebar-group {
     margin-bottom: 10px;
 }
 
-.legend-group h5 {
+.sidebar-group h5 {
     font-size: 16px;
     margin-bottom: 10px;
     color: #333;
@@ -175,20 +179,20 @@
     padding-bottom: 5px;
 }
 
-.legend-group .checkbox-container {
+.sidebar-group .checkbox-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
 }
 
 /* Checkbox */
-.legend-group label {
+.sidebar-group label {
     display: block;
     margin: 5px 0;
     font-size: 14px;
     cursor: pointer;
 }
 
-.legend-group input[type="checkbox"] {
+.sidebar-group input[type="checkbox"] {
     margin-right: 8px;
 }
 
@@ -223,3 +227,4 @@
     visibility: hidden;
     transition: opacity 0.5s ease, visibility 0.5s ease;
 }
+

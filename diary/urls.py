@@ -12,6 +12,7 @@ urlpatterns = [
     path("upload-avatar/", views.upload_avatar, name='upload-avatar'),
     path("profile/", views.profile, name="profile"),
     path("my-places/", views.my_places, name="my-places"),
+    path('api/reverse-geocode/', views.reverse_geocode, name='reverse_geocode'),
 ]
 
 if settings.DEBUG:

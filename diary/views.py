@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.core.files.storage import default_storage
 from django.utils import timezone
 import json
+import requests
 
 from .models import User, Place, MarkerSubCategory, MarkerCategory
 
@@ -153,10 +154,30 @@ def my_places(request):
     categories = MarkerCategory.objects.all()
     subCategories = MarkerSubCategory.objects.all()
 
-    categories_data = list(MarkerSubCategory.objects.values("value", "icon", "marker_color"))
+    categories_data = list(MarkerSubCategory.objects.values("value", "icon", "marker_color", "emoji"))
     return render(request, "diary/my_places.html", {
         "places": places_json,
         "categories": categories,
         "subCategories": subCategories,
         "categories_data": json.dumps(categories_data)
     })
+
+def reverse_geocode(request):
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
+
+    if not lat or not lon:
+        return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
+
+    url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}"
+    headers = {
+        "User-Agent": "Diary/1.0 (foo@example.com)",
+        "Accept-Language": "en"
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    except requests.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=500)

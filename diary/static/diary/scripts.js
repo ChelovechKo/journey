@@ -12,37 +12,96 @@ function myPlaces(){
     let isLegendVisible = true;
     let hideTimeout;
 
-    // Find missing data
+    // Find Elevation with coordinates
+    async function getElevation(lat, lon) {
+        const url = `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`;
+
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                return data.results[0].elevation;
+            })
+            .catch(error => {
+                console.error('Error fetching elevation:', error);
+                return '';
+            });
+    }
+
+    // Get geo-info with coordinates
     async function reverseGeocode(lat, lng) {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+        const url = `/api/reverse-geocode/?lat=${lat}&lon=${lng}`;
+
         try {
             const response = await fetch(url);
             const data = await response.json();
             return {
-                country: data.address.country || "",
-                city: data.address.city || data.address.town || ""
+                country: data.address?.country || "",
+                city: data.address?.city || data.address?.town || "",
+                countryCode: data.address?.country_code || ""
             };
         } catch (err) {
             console.error("Error in reverse geocoding:", err);
-            return { country: "N/A", city: "N/A" };
+            return { country: "", city: "" };
         }
     }
+
     // If Marker Click Handle than show details
-    function displayPlaceInfo(place) {
+    function displayPlaceInfo(place, categoryValue) {
         const detailBlock = document.getElementById("detail-place-info");
+
+        // format longitude & latitude
+        function formatCoordinates(lat, lng) {
+            if (lat && lng) {
+                const latDirection = lat >= 0 ? "N" : "S";
+                const lngDirection = lng >= 0 ? "E" : "W";
+
+                const formattedLat = `${Math.abs(lat).toFixed(2)}° ${latDirection}`;
+                const formattedLng = `${Math.abs(lng).toFixed(2)}° ${lngDirection}`;
+
+                return `${formattedLat} ${formattedLng}`;
+            }
+            return '';
+        }
+        function formattedDateTime(){
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // добавляем ведущий ноль
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
 
         // Fill detailBlock
         reverseGeocode(place.lat, place.lng).then(location => {
-            document.getElementById("country").value = place.category.country || location.country;
-            document.getElementById("city").value = place.category.city || location.city;
+            const countryName = place.category.country || location.country;
+            const cityName = place.category.city || location.city;
+            const countryCode = location.countryCode || '';
 
+            document.getElementById("country-flag").className = `flag-icon flag-icon-${countryCode.toLowerCase()}`;
+            document.getElementById("country-tooltip").setAttribute("title", countryName);
+            document.getElementById("city-name").textContent = cityName;
+            document.getElementById("longlat").textContent = formatCoordinates(place.lng, place.lat);
+
+            getElevation(place.lat, place.lng).then(elevation => {
+                document.getElementById("altitude").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
+            });
         });
+        const categoryEmoji = categoriesData.find(cat => cat.value === categoryValue)?.emoji || "";
+        document.getElementById("category-tooltip").setAttribute("title", categoryValue.charAt(0).toUpperCase() + categoryValue.slice(1));
+        document.getElementById("category").textContent = `${categoryEmoji}`;
+        document.getElementById("datetime-picker").value = formattedDateTime();
+
         document.getElementById("place-name").value = place.name || "";
-        document.getElementById("latitude").value = place.lat || "";
-        document.getElementById("longitude").value = place.lng || "";
-        document.getElementById("altitude").value = place.category.altitude || "";
-        document.getElementById("datetime").value = new Date().toLocaleString();
+
         document.getElementById("description").value = "";
+
 
         // Show detailBlock
         detailBlock.style.display = "block";
@@ -160,7 +219,7 @@ function myPlaces(){
                 marker.bindTooltip(place.name, {permanent: false, direction: "top", offset: [0, -10] });
 
                 // Marker Click Handle
-                marker.on('click', () => {displayPlaceInfo(place);});
+                marker.on('click', () => {displayPlaceInfo(place, place.category[categoryKey]);});
 
                 marker.addTo(map);
                 markers.push(marker);

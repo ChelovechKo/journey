@@ -7,14 +7,53 @@
     <!-- Map and Legend -->
     <div class="route-map-legend row g-0">
         <!-- Planning route -->
-        <div class="col-md-2 col-12 bg-light p-3 map-legend" id="create-route">
-            <div class="legend-group">
+        <div class="col-md-2 col-12 bg-light p-3 sidebar" id="create-route">
+            <div class="sidebar-group" id="detail-place-info">
+                <h5>Detail Place Info</h5>
+                <form method="post" id="place-form">
+                    {% csrf_token %}
+                    
+                    <div class="d-flex align-items-center ">
+                        <div class="me-2" data-bs-toggle="tooltip" title="" id="country-tooltip">
+                            <span id="country-flag"></span>
+                        </div>
+                        <div id="city-name" class="small"></div>
+                        <div id="longlat" class="small ms-auto"></div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center ">
+                        <div id="altitude"></div>
+                    </div>
+                    
+                    <div class="form-group mt-2">
+                        <div class="input-group">
+                            <input type="datetime-local" id="datetime-picker" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-2">
+                        <div data-bs-toggle="tooltip" title="" id="category-tooltip">
+                            <span id="category"></span>
+                        </div>
+                        <input type="text" id="place-name" class="form-control" name="name" required>
+                    </div> 
+
+                    <label>Description: <textarea id="description"></textarea></label>
+                    <!--
+                    <label><input type="checkbox" class="category-filter" value="visited"> Visited</label>
+                    <label><input type="checkbox" class="category-filter" value="plan_to_visit"> Plan to Visit</label>
+                    -->
+                    <button type="submit" class="btn btn-primary mt-3">Add Point</button>
+                </form>
+            </div>
+            
+            <div class="sidebar-group">
                 <h5>Create your route</h5>
             </div>
         </div>
 
         <!-- Map -->
-        <div class="col-md-7 col-12" id="map-container">
+        <div class="col-md-8 col-12" id="map-container">
             <div id="map">
                 <button id="legend-toggle-btn" class="btn btn-outline-secondary btn-sm"
                         data-bs-toggle="tooltip" 
@@ -26,19 +65,19 @@
         </div>
 
         <!-- Map Legend (Sidebar) -->
-        <div class="col-md-3 col-12 bg-light p-3 map-legend" id="map-legend">
+        <div class="col-md-2 col-12 bg-light sidebar legend" id="map-legend">
 
             <!-- My Places -->
-            <div class="legend-group mt-3">
+            <div class="sidebar-group">
                 <h5>My Places</h5>
                  <div class="row">
-                     <div class="col-4">
+                     <div class="col-6">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="visited">
                             <label class="form-check-label" for="visited">Visited</label>
                         </div>
                      </div>
-                     <div class="col-4">
+                     <div class="col-6">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="planned">
                             <label class="form-check-label" for="planned">Planned</label>
@@ -49,17 +88,18 @@
 
             <!-- Categories -->
             {% for category in categories %}
-                <div class="legend-group mt-3">
+                <div class="sidebar-group mt-3">
                     <h5>{{ category.category }}</h5>
                     <div class="row">
                         {% for subcategory in category.subcategories.all %}
-                            <div class="col-4">
+                            <div class="col-6">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input"
                                            id="category-{{ subcategory.key }}:{{ subcategory.value }}">
                                     <label class="form-check-label"
                                            for="category-{{ subcategory.key }}:{{ subcategory.value }}">
                                         {{ subcategory.value|capfirst }}
+                                        {{ subcategory.emoji }}
                                     </label>
                                 </div>
                             </div>
@@ -69,59 +109,8 @@
             {% endfor %}
         </div>
      </div>
-
-    <!-- Detail Place Info -->
-    <div id="detail-place-info" class="mt-4" style="display: none;">
-        <h4>Place Information</h4>
-        <form method="post" id="place-form">
-            {% csrf_token %}
-            <div class="form-row">
-                <div class="col-md-4">
-                    <label>Name: <input type="text" id="place-name" class="form-control" name="name" required></label>
-                </div>
-                <div class="col-md-4">
-                    <label>Country: <input id="country" type="text" class="form-control" name="country" readonly></label>    
-                </div>
-                <div class="col-md-4">
-                    <label>City: <input id="city" type="text" class="form-control" name="city" readonly></label>
-                </div>
-            </div>
-     
-    <label>Latitude: <input id="latitude" readonly></label>
-    <label>Longitude: <input id="longitude" readonly></label>
-    <label>Altitude: <input id="altitude" readonly></label>
-    <label>Date/Time: <input id="datetime" readonly></label>
-    <label>Category: <input id="category" readonly></label>
-    <label>Description: <textarea id="description"></textarea></label>
-            <!--
-            <div class="form-group">
-                <label for="place-name">Name</label>
-                <input type="text" id="place-name" class="form-control" name="name" required>
-            </div>
-            <div class="form-row">
-                <div class="col">
-                    <label for="country">Country</label>
-                    <input type="text" id="country" class="form-control" name="country" required>
-                </div>
-                <div class="col">
-                    <label for="city">City</label>
-                    <input type="text" id="city" class="form-control" name="city">
-                </div>
-            </div>
-            <div class="form-group mt-2">
-                <label for="latitude">Latitude</label>
-                <input type="text" id="latitude" class="form-control" name="latitude" readonly>
-                <label for="longitude">Longitude</label>
-                <input type="text" id="longitude" class="form-control" name="longitude" readonly>
-            </div>
-            <label><input type="checkbox" class="category-filter" value="visited"> Visited</label>
-            <label><input type="checkbox" class="category-filter" value="plan_to_visit"> Plan to Visit</label>
-            -->
-            <button type="submit" class="btn btn-primary mt-3">Add Point</button>
-        </form>
-    </div>
-    
-    <script type="application/json" id="categories-data"> {{ categories_data|safe }} </script>
+ 
+     <script type="application/json" id="categories-data"> {{ categories_data|safe }} </script>
 </div>
 
 {% endblock %}
