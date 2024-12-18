@@ -6,6 +6,7 @@ function myPlaces(){
     const categoriesData = JSON.parse(document.getElementById("categories-data").textContent);
     const LegendToggleBtn = document.getElementById('legend-toggle-btn');
     const mapLegend = document.getElementById('map-legend');
+    const toggleButtons = document.querySelectorAll(".btn-toggle");
 
     let isLegendVisible = true;
     let hideTimeout;
@@ -37,10 +38,15 @@ function myPlaces(){
         try {
             const response = await fetch(url);
             const data = await response.json();
+            console.log("data:", data);
             return {
-                country: data.address?.country || "",
-                city: data.address?.city || data.address?.town || "",
-                countryCode: data.address?.country_code || ""
+                country: data.address?.country,
+                city: data.address?.city || data.address?.town,
+                countryCode: data.address?.country_code,
+                category: data.type,
+                road: data.address.road,
+                house_number: data.address.house_number,
+                postcode: data.address.postcode
             };
         } catch (err) {
             console.error("Error in reverse geocoding:", err);
@@ -49,8 +55,14 @@ function myPlaces(){
     }
 
     // If Marker Click Handle than show details
-    function displayPlaceInfo(place, categoryValue) {
+    function displayPlaceInfo(place) {
         const detailBlock = document.getElementById("detail-place-info");
+        const routeMainBlock = document.getElementById("route-main-block");
+        const editButton = document.getElementById("edit-name-btn");
+
+        //Place Name
+        const nameDisplayEl = document.getElementById("place-name-display");
+        const nameInputEl = document.getElementById("place-name-input");
 
         // format longitude & latitude
         function formatCoordinates(lat, lng) {
@@ -68,7 +80,7 @@ function myPlaces(){
         function formattedDateTime(){
             const now = new Date();
             const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0'); // добавляем ведущий ноль
+            const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -78,31 +90,50 @@ function myPlaces(){
 
         // Fill detailBlock
         reverseGeocode(place.lat, place.lng).then(location => {
-            const countryName = place.category.country || location.country;
-            const cityName = place.category.city || location.city;
+            const countryName = place.category.country || location.country || '';
+            const cityName = place.category.city || location.city || '';
             const countryCode = location.countryCode || '';
-
-            document.getElementById("country-flag").className = `flag-icon flag-icon-${countryCode.toLowerCase()}`;
-            document.getElementById("country-tooltip").setAttribute("title", countryName);
-            document.getElementById("city-name").textContent = cityName;
-            document.getElementById("longlat").textContent = formatCoordinates(place.lng, place.lat);
+            const categoryValue = location.category;
+            const categoryEmoji = categoriesData.find(cat => cat.value === categoryValue)?.emoji || "";
+            const address = location.road + ' ' + location.house_number + ', ' + cityName + ' ' + location.postcode + ', ' + countryName;
 
             getElevation(place.lat, place.lng).then(elevation => {
                 document.getElementById("altitude").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
             });
+            document.getElementById("longlat").textContent = formatCoordinates(place.lng, place.lat);
+
+            document.getElementById("country-flag").className = `flag-icon flag-icon-${countryCode.toLowerCase()}`;
+            document.getElementById("country-tooltip").setAttribute("title", countryName);
+            //document.getElementById("city-name").textContent = cityName;
+            document.getElementById("address").textContent = address;
+
+            //document.getElementById("category").textContent = `${categoryEmoji}`;
+            //document.getElementById("category-tooltip").setAttribute("title", categoryValue.charAt(0).toUpperCase() + categoryValue.slice(1));
         });
-        const categoryEmoji = categoriesData.find(cat => cat.value === categoryValue)?.emoji || "";
-        document.getElementById("category-tooltip").setAttribute("title", categoryValue.charAt(0).toUpperCase() + categoryValue.slice(1));
-        document.getElementById("category").textContent = `${categoryEmoji}`;
         document.getElementById("datetime-picker").value = formattedDateTime();
-
-        document.getElementById("place-name").value = place.name || "";
-
+        nameDisplayEl.textContent = place.name;
         document.getElementById("description").value = "";
 
+        // Edit Place Name
+        editButton.addEventListener("click", () => {
+            // Toggle Edit Mode
+            if (nameInputEl.classList.contains("d-none")) {
+                nameInputEl.classList.remove("d-none");
+                nameDisplayEl.classList.add("d-none");
+                nameInputEl.value = nameDisplayEl.textContent;
+                nameInputEl.focus();
+                editButton.innerHTML = "✅";
+            } else {
+                nameInputEl.classList.add("d-none");
+                nameDisplayEl.classList.remove("d-none");
+                nameDisplayEl.textContent = nameInputEl.value;
+                editButton.innerHTML = "✏️";
+            }
+        });
 
         // Show detailBlock
-        detailBlock.style.display = "block";
+        detailBlock.classList.remove("hidden");
+        routeMainBlock.classList.remove("hidden");
     }
 
     // location determination
@@ -217,7 +248,8 @@ function myPlaces(){
                 marker.bindTooltip(place.name, {permanent: false, direction: "top", offset: [0, -10] });
 
                 // Marker Click Handle
-                marker.on('click', () => {displayPlaceInfo(place, place.category[categoryKey]);});
+                marker.on('click', () => {displayPlaceInfo(place);});
+                //marker.on('mouseout', hidePlaceInfo);
 
                 marker.addTo(map);
                 markers.push(marker);
@@ -249,12 +281,12 @@ function myPlaces(){
             // Hide Legend
             mapLegend.classList.add('hidden');
             LegendToggleBtn.querySelector('i').classList.replace('fa-chevron-right', 'fa-chevron-left');
-            mapContainer.classList.replace('col-md-8', 'col-md-10');
+            mapContainer.classList.replace('col-md-7', 'col-md-9');
         } else {
             // Show Legend
             mapLegend.classList.remove('hidden');
             LegendToggleBtn.querySelector('i').classList.replace('fa-chevron-left', 'fa-chevron-right');
-            mapContainer.classList.replace('col-md-10', 'col-md-8');
+            mapContainer.classList.replace('col-md-9', 'col-md-7');
         }
 
         isLegendVisible = !isLegendVisible;
@@ -262,6 +294,20 @@ function myPlaces(){
         setTimeout(() => {
             map.invalidateSize();
         }, 300);
+    }
+
+    // Collapse SidebarGroup
+    function collapseSidebarGroup(button){
+        const sidebarGroup = button.closest(".sidebar-group");
+        const content = sidebarGroup.querySelector(".group-content");
+
+        content.classList.toggle("hidden");
+
+        if (content.classList.contains("hidden")) {
+            button.innerHTML = "+";
+        } else {
+            button.innerHTML = "&minus;";
+        }
     }
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -295,6 +341,11 @@ function myPlaces(){
     LegendToggleBtn.addEventListener("mouseleave", hideToggleLegendBtn);
 
     LegendToggleBtn.addEventListener('click', hideShowMapLegend);
+
+
+    toggleButtons.forEach(button => {
+        button.addEventListener("click", () => {collapseSidebarGroup(button);});
+    });
 }
 
 // Changing Avatar's icon. Page Register and Profile
