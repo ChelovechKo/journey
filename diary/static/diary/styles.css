@@ -140,20 +140,35 @@
     cursor: pointer;
 }
 
+html, body {
+    overflow: hidden;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
 /* Map and Legend */
 /* Common block */
 .route-map-legend{
-    display: flex;
+    min-height: 100vh;
 }
 
 /* Map */
 #map-container {
-    display: flex;
     transition: width 0.3s ease-in-out;
+    min-height: 100vh;
+    display: flex;
 }
 
 #map {
     width: 100%;
+    height: 100%;
 }
 
 .sidebar{
@@ -164,6 +179,7 @@
     background-color: #f9f9f9;
     overflow-y: auto;
     box-sizing: border-box;
+    min-height: 100vh;
 }
 
 /* Groups in Legend */
@@ -204,12 +220,11 @@
 /*Map Legend animation*/
 .legend {
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-    position: relative;
+    transform: translateX(0);
 }
 
 .legend.hidden {
     transform: translateX(100%);
-    opacity: 0;
 }
 
 #legend-toggle-btn {
