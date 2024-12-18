@@ -175,3 +175,4 @@ def reverse_geocode(request):
         return JsonResponse(response.json())
     except requests.RequestException as e:
         return JsonResponse({'error': str(e)}, status=500)
+

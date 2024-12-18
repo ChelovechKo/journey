@@ -1,5 +1,3 @@
-from enum import unique
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -13,23 +11,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-class Place(models.Model):
-    '''User's point on the map'''
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places")
-    name = models.CharField(max_length=100)
-    country = models.CharField(max_length=100)
-    city = models.CharField(max_length=100, null=True, blank=True)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    altitude = models.FloatField(null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    datetime = models.DateTimeField(null=True, blank=True)
-    is_visited = models.BooleanField(default=False)
-    category = models.CharField(max_length=50, default='default')  # marker icon
-
-    def __str__(self):
-        return f"{self.name} - {self.category}"
 
 class MarkerCategory(models.Model):
     '''Dictionary of Marker's Categories'''
@@ -38,6 +19,7 @@ class MarkerCategory(models.Model):
 
     def __str__(self):
         return self.category
+
 
 class MarkerSubCategory(models.Model):
     '''Dictionary of Marker's Sub Categories'''
@@ -51,3 +33,53 @@ class MarkerSubCategory(models.Model):
 
     def __str__(self):
         return f"{self.category.category} - {self.key}:{self.value}"
+
+
+class Route(models.Model):
+    """Model for save Routes"""
+    ROUTE_TYPES = [
+        ('walking', 'Walking'),
+        ('cycling', 'Cycling'),
+        ('driving', 'Driving'),
+    ]
+
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="routes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    name = models.CharField(max_length=255)
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    route_type = models.CharField(max_length=20, choices=ROUTE_TYPES, null=True, blank=True)
+    rating = models.PositiveSmallIntegerField(null=True, blank=True) # from 1 to 5
+    distance = models.FloatField(null=True, blank=True)  # in meters
+    duration = models.PositiveIntegerField(null=True, blank=True)  # in minutes
+    cost = models.FloatField(null=True, blank=True) # ??? convert ???
+    difficulty = models.PositiveSmallIntegerField(null=True, blank=True) # from 1 to 5
+    description = models.TextField(blank=True)
+    elevation_gain = models.FloatField(null=True, blank=True)  # in meters
+    isPlan = models.BooleanField(default=True) # True - in Plan, False - is Done
+    isDraft = models.BooleanField(default=True) # True - is Draft, False - is Published
+
+    def __str__(self):
+        return self.name
+
+
+class Place(models.Model):
+    '''Model for save Places in the Routes'''
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places")
+    name = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    altitude = models.FloatField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    datetime = models.DateTimeField(null=True, blank=True)
+    is_visited = models.BooleanField(default=False)
+    category = models.CharField(max_length=50, default='default')  # marker icon
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="places", null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name}"
