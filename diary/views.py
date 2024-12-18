@@ -91,31 +91,25 @@ def profile(request):
     user = request.user
 
     if request.method == "POST":
-        new_username = request.POST.get("username")
         old_password = request.POST.get("old_password")
         new_password = request.POST.get("new_password")
         password_confirmation = request.POST.get("password_confirmation")
         avatar = request.FILES.get("avatar")
         selected_icon = request.POST.get("selectedIconInput")
         selected_color = request.POST.get("selectedColorInput")
-        isChangeProfile = False
-
-        # renew User's Name
-        if new_username and new_username != user.username:
-            user.username = new_username
-            isChangeProfile = True
+        is_change_profile = False
 
         # renew User's Avatar
         if avatar:
             user.avatar = avatar
             user.selected_icon = None
             user.selected_color = None
-            isChangeProfile = True
+            is_change_profile = True
         elif user.selected_icon:
             user.avatar = None
             user.selected_icon = selected_icon
             user.selected_color = selected_color
-            isChangeProfile = True
+            is_change_profile = True
 
         # check and renew password
         if old_password or new_password or password_confirmation:
@@ -136,7 +130,7 @@ def profile(request):
                 update_session_auth_hash(request, user) # renew user's session
                 messages.success(request, "Password updated successfully.")
 
-        if isChangeProfile:
+        if is_change_profile:
             user.save()
             messages.success(request, "Profile updated successfully.")
 

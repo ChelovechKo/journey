@@ -3,7 +3,7 @@
 {% block body %}
     <div class="mx-4 my-3">
         <div class="container-lg mt-3">
-            <h2>Profile</h2>
+            <h2>{{ user.username }}</h2>
             <hr>
 
             <!-- Flash Messages -->
@@ -70,14 +70,6 @@
                 </div>
 
                 <div class="container w-50 ms-0">
-                    <!-- New Username -->
-                    <div class="row mb-3 align-items-center">
-                        <label for="username" class="col-sm-3 col-form-label text-secondary text-nowrap">New Username:</label>
-                        <div class="col-sm-9">
-                            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}">
-                        </div>
-                    </div>
-
                     <!-- Old Password -->
                     <div class="row mb-3 align-items-center">
                         <label for="old_password" class="col-sm-3 col-form-label text-secondary text-nowrap">Old Password:</label>
