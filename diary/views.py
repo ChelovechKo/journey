@@ -7,6 +7,8 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.core.files.storage import default_storage
 from django.utils import timezone
+
+from datetime import datetime
 import json
 import requests
 
@@ -148,7 +150,7 @@ def my_places(request):
     categories = MarkerCategory.objects.all()
     subCategories = MarkerSubCategory.objects.all()
 
-    categories_data = list(MarkerSubCategory.objects.values("value", "icon", "marker_color", "emoji"))
+    categories_data = list(MarkerSubCategory.objects.values("id", "value", "icon", "marker_color", "emoji"))
     return render(request, "diary/my_places.html", {
         "places": places_json,
         "categories": categories,
@@ -182,56 +184,37 @@ def add_point_to_route(request):
     if request.method == "POST":
         data = request.POST
         user = request.user
+        category_id = int(data.get('placeCategoryId')) if data.get('placeCategoryId') else None
+        dt = timezone.make_aware(datetime.strptime(data.get('dt', ''), "%Y-%m-%dT%H:%M"))
 
+        # Add Route
         # If exist -> created = True, if not -> created = False
-        '''route, created = Route.objects.get_or_create(
+        route, created = Route.objects.get_or_create(
             user=user,
-            is_draft=True,
+            isDraft=True,
             defaults={'name': 'New Route', 'created_at': timezone.now()}
-        )'''
+        )
 
-        # Add Point
-        user = user,
-        name = data.get('placeName', 'New Point'),
-        latitude = float(data.get('placeLatitude')),
-        longitude = float(data.get('placeLongitude')),
-        altitude = float(data.get('placeAltitude')),
-        country = data.get('placeCountryName'),
-        countryISO = data.get('placeCountryISO'),
-        city = data.get('placeCityName'),
-        dt = data.get('placeDt'),
-        description = data.get('placeDescription'),
-        # isVisited=data.get('placeIsVisited'),
-        # cost=data.get('placeCost'),
-        category = data.get('placeCategoryId')
-        print("user = ", user)
-        print("name = ", name)
-        print("latitude = ", latitude)
-        print("longitude = ", longitude)
-        print("altitude = ", altitude)
-        print("country = ", country)
-        print("countryISO = ", countryISO)
-        print("city = ", city)
-        print("dt = ", dt)
-        print("description = ", description)
-        print("category = ", category)
-        '''place = Place.objects.create(
+        name = data.get('placeName', 'New Point')
+        print(f'{name}')
+
+        # Add New Point
+        place = Place.objects.create(
             route=route,
             user=user,
             name=data.get('placeName', 'New Point'),
-            latitude=float(data.get('placeLatitude')),
-            longitude=float(data.get('placeLongitude')),
-            altitude=float(data.get('placeAltitude')),
+            latitude=float(data.get('placeLatitude')) if data.get('placeLatitude') else None,
+            longitude=float(data.get('placeLongitude')) if data.get('placeLongitude') else None,
+            altitude=float(data.get('placeAltitude')) if data.get('placeAltitude') else None,
             country=data.get('placeCountryName'),
             countryISO=data.get('placeCountryISO'),
             city=data.get('placeCityName'),
-            dt=data.get('placeDt'),
+            dt=dt,
             description=data.get('placeDescription'),
             # isVisited=data.get('placeIsVisited'),
             # cost=data.get('placeCost'),
-            category=data.get('placeCategoryId')
-        )'''
-
+            category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None
+        )
         # Return new Point for update route-main-block
-        #return JsonResponse({'success': True, 'point_name': place.name})
-    #return JsonResponse({'success': False, 'error': 'Invalid request'})
+        return JsonResponse({'success': True, 'point_name': place.name})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})

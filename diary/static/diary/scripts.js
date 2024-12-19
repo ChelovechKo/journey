@@ -34,16 +34,14 @@ function myPlaces(){
     // Get geo-info with coordinates
     async function reverseGeocode(lat, lng) {
         const url = `/api/reverse-geocode/?lat=${lat}&lon=${lng}`;
-
         try {
             const response = await fetch(url);
             const data = await response.json();
-            console.log("data:", data);
             return {
                 country: data.address?.country,
                 city: data.address?.city || data.address?.town,
                 countryCode: data.address?.country_code,
-                category: data.type,
+                category: data.type.trim().toLowerCase(),
                 road: data.address.road,
                 house_number: data.address.house_number,
                 postcode: data.address.postcode
@@ -137,13 +135,45 @@ function myPlaces(){
                 nameInputEl.classList.add("d-none");
                 nameDisplayEl.classList.remove("d-none");
                 nameDisplayEl.textContent = nameInputEl.value;
-                editButton.innerHTML = "✏️";
+                editButton.innerHTML = "✏";
             }
         });
 
         // Show detailBlock
         detailBlock.classList.remove("hidden");
         routeMainBlock.classList.remove("hidden");
+
+        // Submit. Add point to route
+        document.getElementById('place-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            nameInputEl.value = nameDisplayEl.textContent;
+
+            //console.log("Form Data:", Object.fromEntries(formData.entries()));
+
+            fetch('/add_point_to_route/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add point to Route
+                    const routeBlock = document.getElementById('route-main-block');
+                    const newPoint = document.createElement('div');
+                    newPoint.className = 'point-item';
+                    newPoint.textContent = data.point_name;
+                    routeBlock.appendChild(newPoint);
+                } else {
+                    alert('Error adding point: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
     }
 
     // location determination

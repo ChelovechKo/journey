@@ -51,16 +51,16 @@ class Route(models.Model):
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     route_type = models.CharField(max_length=20, choices=ROUTE_TYPES, null=True, blank=True)
-    rating = models.PositiveSmallIntegerField(null=True, blank=True) # from 1 to 5
+    rating = models.PositiveSmallIntegerField(null=True, blank=True)  # from 1 to 5
     distance = models.FloatField(null=True, blank=True)  # in meters
     duration = models.PositiveIntegerField(null=True, blank=True)  # in minutes
-    cost = models.FloatField(null=True, blank=True) # ??? convert ???
-    difficulty = models.PositiveSmallIntegerField(null=True, blank=True) # from 1 to 5
+    cost = models.FloatField(null=True, blank=True)  # ??? convert ???
+    difficulty = models.PositiveSmallIntegerField(null=True, blank=True)  # from 1 to 5
     description = models.TextField(blank=True)
     elevation_gain = models.FloatField(null=True, blank=True)  # in meters
-    isPlan = models.BooleanField(default=True) # True - is in Plan, False - is Finished
-    isDraft = models.BooleanField(default=False) # True - is Draft, False - is Done
-    isPublished = models.BooleanField(default=False) # True - is Published, False - is not
+    isPlan = models.BooleanField(default=True)  # True - is in Plan, False - is Finished
+    isDraft = models.BooleanField(default=False)  # True - is Draft, False - is Done
+    isPublished = models.BooleanField(default=False)  # True - is Published, False - is not
 
     def __str__(self):
         return self.name

@@ -13,6 +13,7 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
     path("my-places/", views.my_places, name="my-places"),
     path('api/reverse-geocode/', views.reverse_geocode, name='reverse_geocode'),
+    path('add_point_to_route/', views.add_point_to_route, name='add_point_to_route'),
 ]
 
 if settings.DEBUG:
