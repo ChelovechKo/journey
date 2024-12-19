@@ -58,8 +58,9 @@ class Route(models.Model):
     difficulty = models.PositiveSmallIntegerField(null=True, blank=True) # from 1 to 5
     description = models.TextField(blank=True)
     elevation_gain = models.FloatField(null=True, blank=True)  # in meters
-    isPlan = models.BooleanField(default=True) # True - in Plan, False - is Done
-    isDraft = models.BooleanField(default=True) # True - is Draft, False - is Published
+    isPlan = models.BooleanField(default=True) # True - is in Plan, False - is Finished
+    isDraft = models.BooleanField(default=False) # True - is Draft, False - is Done
+    isPublished = models.BooleanField(default=False) # True - is Published, False - is not
 
     def __str__(self):
         return self.name
@@ -71,14 +72,16 @@ class Place(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places")
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
+    countryISO = models.CharField(max_length=2, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
     altitude = models.FloatField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    datetime = models.DateTimeField(null=True, blank=True)
-    is_visited = models.BooleanField(default=False)
-    category = models.CharField(max_length=50, default='default')  # marker icon
+    dt = models.DateTimeField(null=True, blank=True)
+    isVisited = models.BooleanField(default=False)
+    cost = models.FloatField(null=True, blank=True)  # ??? convert ???
+    category = models.ForeignKey(MarkerSubCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="places")
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="places", null=True, blank=True)
 
     def __str__(self):

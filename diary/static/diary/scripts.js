@@ -62,7 +62,7 @@ function myPlaces(){
 
         //Place Name
         const nameDisplayEl = document.getElementById("place-name-display");
-        const nameInputEl = document.getElementById("place-name-input");
+        const nameInputEl = document.getElementById("place-name");
 
         // format longitude & latitude
         function formatCoordinates(lat, lng) {
@@ -94,25 +94,35 @@ function myPlaces(){
             const cityName = place.category.city || location.city || '';
             const countryCode = location.countryCode || '';
             const categoryValue = location.category;
-            const categoryEmoji = categoriesData.find(cat => cat.value === categoryValue)?.emoji || "";
+            const categoryId = categoriesData.find(cat => cat.value === categoryValue).id;
+            //const categoryEmoji = categoriesData.find(cat => cat.value === categoryValue)?.emoji || "";
             const address = location.road + ' ' + location.house_number + ', ' + cityName + ' ' + location.postcode + ', ' + countryName;
 
+            // Altitude + Longitude + Latitude
+            document.getElementById("place-longitude").value = place.lng;
+            document.getElementById("place-latitude").value = place.lat;
+            document.getElementById("place-longlat").textContent = formatCoordinates(place.lng, place.lat);
             getElevation(place.lat, place.lng).then(elevation => {
-                document.getElementById("altitude").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
+                document.getElementById("place-altitude").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
             });
-            document.getElementById("longlat").textContent = formatCoordinates(place.lng, place.lat);
 
-            document.getElementById("country-flag").className = `flag-icon flag-icon-${countryCode.toLowerCase()}`;
-            document.getElementById("country-tooltip").setAttribute("title", countryName);
-            //document.getElementById("city-name").textContent = cityName;
-            document.getElementById("address").textContent = address;
+            // Country + City
+            document.getElementById("place-country-iso").value = countryCode;
+            document.getElementById("place-country-name").value = countryName;
+            document.getElementById("place-city-name").value = cityName;
 
-            //document.getElementById("category").textContent = `${categoryEmoji}`;
-            //document.getElementById("category-tooltip").setAttribute("title", categoryValue.charAt(0).toUpperCase() + categoryValue.slice(1));
+            document.getElementById("place-country-flag").className = `flag-icon flag-icon-${countryCode.toLowerCase()}`;
+            document.getElementById("place-country-tooltip").setAttribute("title", countryName);
+            document.getElementById("place-address").textContent = address;
+
+            // Category
+            document.getElementById("place-category-id").value = categoryId;
+            //document.getElementById("place-category").textContent = `${categoryEmoji}`;
+            //document.getElementById("place-category-tooltip").setAttribute("title", categoryValue.charAt(0).toUpperCase() + categoryValue.slice(1));
         });
-        document.getElementById("datetime-picker").value = formattedDateTime();
+        document.getElementById("place-datetime-picker").value = formattedDateTime();
         nameDisplayEl.textContent = place.name;
-        document.getElementById("description").value = "";
+        document.getElementById("place-description").value = "";
 
         // Edit Place Name
         editButton.addEventListener("click", () => {

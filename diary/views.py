@@ -10,7 +10,7 @@ from django.utils import timezone
 import json
 import requests
 
-from .models import User, Place, MarkerSubCategory, MarkerCategory
+from .models import User, Place, MarkerSubCategory, MarkerCategory, Route
 
 
 def index(request):
@@ -176,3 +176,62 @@ def reverse_geocode(request):
     except requests.RequestException as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+@login_required
+def add_point_to_route(request):
+    '''After push the AddPointToRoute button'''
+    if request.method == "POST":
+        data = request.POST
+        user = request.user
+
+        # If exist -> created = True, if not -> created = False
+        '''route, created = Route.objects.get_or_create(
+            user=user,
+            is_draft=True,
+            defaults={'name': 'New Route', 'created_at': timezone.now()}
+        )'''
+
+        # Add Point
+        user = user,
+        name = data.get('placeName', 'New Point'),
+        latitude = float(data.get('placeLatitude')),
+        longitude = float(data.get('placeLongitude')),
+        altitude = float(data.get('placeAltitude')),
+        country = data.get('placeCountryName'),
+        countryISO = data.get('placeCountryISO'),
+        city = data.get('placeCityName'),
+        dt = data.get('placeDt'),
+        description = data.get('placeDescription'),
+        # isVisited=data.get('placeIsVisited'),
+        # cost=data.get('placeCost'),
+        category = data.get('placeCategoryId')
+        print("user = ", user)
+        print("name = ", name)
+        print("latitude = ", latitude)
+        print("longitude = ", longitude)
+        print("altitude = ", altitude)
+        print("country = ", country)
+        print("countryISO = ", countryISO)
+        print("city = ", city)
+        print("dt = ", dt)
+        print("description = ", description)
+        print("category = ", category)
+        '''place = Place.objects.create(
+            route=route,
+            user=user,
+            name=data.get('placeName', 'New Point'),
+            latitude=float(data.get('placeLatitude')),
+            longitude=float(data.get('placeLongitude')),
+            altitude=float(data.get('placeAltitude')),
+            country=data.get('placeCountryName'),
+            countryISO=data.get('placeCountryISO'),
+            city=data.get('placeCityName'),
+            dt=data.get('placeDt'),
+            description=data.get('placeDescription'),
+            # isVisited=data.get('placeIsVisited'),
+            # cost=data.get('placeCost'),
+            category=data.get('placeCategoryId')
+        )'''
+
+        # Return new Point for update route-main-block
+        #return JsonResponse({'success': True, 'point_name': place.name})
+    #return JsonResponse({'success': False, 'error': 'Invalid request'})

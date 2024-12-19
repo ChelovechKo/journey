@@ -23,37 +23,45 @@
                         {% csrf_token %}
                         
                         <!-- Altitude + Longitude + Latitude -->
+                        <input type="hidden" id="place-longitude" name="placeLongitude">
+                        <input type="hidden" id="place-latitude" name="placeLatitude">                        
                         <div class="group-item">
-                            <div id="altitude"></div>
-                            <div id="longlat" class="small ms-auto"></div>
+                            <div id="place-altitude" name="placeAltitude"></div>
+                            <div id="place-longlat" class="small ms-auto"></div>
                         </div>
             
                         <!-- Country + Address -->
+                        <input type="hidden" id="place-country-iso" name="placeCountryISO">
+                        <input type="hidden" id="place-country-name" name="placeCountryName">
+                        <input type="hidden" id="place-city-name" name="placeCityName">
                         <div class="group-item">
-                            <div class="me-2" data-bs-toggle="tooltip" id="country-tooltip">
-                                <span id="country-flag"></span>
+                            <div class="me-2" data-bs-toggle="tooltip" id="place-country-tooltip">
+                                <span id="place-country-flag"></span>
                             </div>
-                            <div id="address"></div>
+                            <div id="place-address"></div>
                         </div>
             
-                        <!-- Name + NameEdit -->
+                        <!-- Name ✏ -->
                         <div class="group-item">
-                            <label class="me-1">Place Name:</label>
+                            <label class="me-1">Place's Name:</label>
                             <span id="place-name-display" class="fw-bold"></span>
-                            <input type="text" id="place-name-input" class="form-control d-none w-auto">
+                            <input type="text" id="place-name" class="form-control d-none w-auto" name="placeName">
                             <button type="button" id="edit-name-btn" class="btn p-0 border-0 bg-transparent">✏️</button>
                         </div>
             
                         <!-- Date & Time -->
                         <div class="group-item">
                             <label class="me-1">Date of visit:</label>
-                            <input type="datetime-local" id="datetime-picker" class="form-control w-auto">
+                            <input type="datetime-local" id="place-datetime-picker" class="form-control w-auto" name="placeDt">
                         </div>
             
                         <!-- Description -->
                         <div class="group-item">
-                            <textarea id="description" class="form-control" rows="3" placeholder="Enter description here..."></textarea>
+                            <textarea id="place-description" class="form-control" rows="3" placeholder="Enter description here..." name="placeDescription"></textarea>
                         </div>
+                        
+                        <!-- Place's Category -->
+                        <input type="hidden" id="place-category-id" name="placeCategoryId">
             
                         <div class="d-flex justify-content-center">
                             <button type="submit" class="btn btn-secondary mt-3">Add Point to Route</button>
