@@ -285,6 +285,12 @@ html, body {
     margin-bottom: 0;
 }
 
+#route-points {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
 /*Map Legend animation*/
 .legend {
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
@@ -311,3 +317,15 @@ html, body {
     transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
+.point-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.point-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    background-color: #f8f9fa;
+}

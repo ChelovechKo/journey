@@ -14,6 +14,7 @@ urlpatterns = [
     path("my-places/", views.my_places, name="my-places"),
     path('api/reverse-geocode/', views.reverse_geocode, name='reverse_geocode'),
     path('add_point_to_route/', views.add_point_to_route, name='add_point_to_route'),
+    path('delete_point_from_route/<int:point_id>/', views.delete_point_from_route, name='delete_point_from_route'),
 ]
 
 if settings.DEBUG:

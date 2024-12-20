@@ -17,7 +17,7 @@
                     &minus;
                 </button>
                 <div class="group-content hidden" id="detail-place-info">
-                    <form method="post" id="place-form">
+                    <form method="post" id="place-form" class="d-none">
                         {% csrf_token %}
                         
                         <!-- Altitude + Longitude + Latitude -->
@@ -68,12 +68,27 @@
                 </div>
             </div>
         
-            <div class="sidebar-group position-relative hidden" id="route-main-block">
+            <div class="sidebar-group position-relative" id="route-main-block">
                 <h5 class="group-title">Create your route</h5>
                 <button type="button" class="btn btn-toggle" aria-label="Toggle">
                     &minus;
                 </button>
-                <div class="group-content">
+                <div class="group-content" id="route-points">
+                    {% if places %}
+                        {% for place in places %}
+                            <div class="point-item card mb-2 p-2 shadow-sm" data-point-id="{{ place.id }}">
+                                <div class="card-body p-2 d-flex align-items-center gap-2">
+                                    <span class="icon-category">{{ place.icon }}</span>
+                                    <h6 class="card-title mb-1">{{ place.name }}</h6>
+                                    <button type="button" class="btn btn-link text-secondary p-1 position-absolute top-0 end-0" onclick="deletePointFromRoute({{ place.id }})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted">No points added yet.</div>
+                    {% endif %}
                 </div>
             </div>            
         </div>

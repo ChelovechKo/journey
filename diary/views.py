@@ -3,10 +3,11 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib import messages
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.core.files.storage import default_storage
 from django.utils import timezone
+from django.forms.models import model_to_dict
 
 from datetime import datetime
 import json
@@ -142,17 +143,23 @@ def profile(request):
 
 @login_required
 def my_places(request):
-    '''Save User Places'''
-    places = Place.objects.all()  # Get all places
-    places_list = list(places.values("name", "latitude", "longitude", "country", "city"))
-    places_json = json.dumps(places_list)
+    # get user's draft, if exit
+    route = Route.objects.filter(user=request.user, isDraft=True).first()
+    places = []
+    if route:
+        # get route's places
+        for place in Place.objects.filter(route=route):
+            place_data = model_to_dict(place)
+            place_data["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
+            places.append(place_data)
 
     categories = MarkerCategory.objects.all()
     subCategories = MarkerSubCategory.objects.all()
-
     categories_data = list(MarkerSubCategory.objects.values("id", "value", "icon", "marker_color", "emoji"))
+
     return render(request, "diary/my_places.html", {
-        "places": places_json,
+        "route": route,
+        "places": places,
         "categories": categories,
         "subCategories": subCategories,
         "categories_data": json.dumps(categories_data)
@@ -178,6 +185,20 @@ def reverse_geocode(request):
     except requests.RequestException as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+@login_required
+def delete_point_from_route(request, point_id):
+    if request.method == "DELETE":
+        try:
+            place = get_object_or_404(Place, id=point_id, route__user=request.user)
+            place.delete()
+            return JsonResponse({'success': True, 'message': 'Point deleted successfully.'})
+        except Place.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Point does not exist'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
 @login_required
 def add_point_to_route(request):
     '''After push the AddPointToRoute button'''
@@ -185,7 +206,7 @@ def add_point_to_route(request):
         data = request.POST
         user = request.user
         category_id = int(data.get('placeCategoryId')) if data.get('placeCategoryId') else None
-        dt = timezone.make_aware(datetime.strptime(data.get('dt', ''), "%Y-%m-%dT%H:%M"))
+        dt = timezone.make_aware(datetime.strptime(data.get('placeDt'), "%Y-%m-%dT%H:%M"))
 
         # Add Route
         # If exist -> created = True, if not -> created = False
@@ -194,9 +215,6 @@ def add_point_to_route(request):
             isDraft=True,
             defaults={'name': 'New Route', 'created_at': timezone.now()}
         )
-
-        name = data.get('placeName', 'New Point')
-        print(f'{name}')
 
         # Add New Point
         place = Place.objects.create(
@@ -215,6 +233,10 @@ def add_point_to_route(request):
             # cost=data.get('placeCost'),
             category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None
         )
+
+        place_info = model_to_dict(place)
+        place_info["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
+
         # Return new Point for update route-main-block
-        return JsonResponse({'success': True, 'point_name': place.name})
+        return JsonResponse({'success': True, 'place_info': place_info, 'route_info': model_to_dict(route)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})

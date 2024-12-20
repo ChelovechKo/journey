@@ -1,3 +1,28 @@
+function getCSRFToken() {
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    return csrfToken ? csrfToken.value : '';
+}
+
+// Delete point in the Route
+function deletePointFromRoute(pointId) {
+    fetch(`/delete_point_from_route/${pointId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json'
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector(`[data-point-id="${pointId}"]`).remove();
+        } else {
+            alert('Error deleting point: ' + data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
 // Add and Edit Point on the User's Map
 function myPlaces(){
     const map = L.map("map").setView([51.505, -0.09], 2);  // Init Map
@@ -7,9 +32,94 @@ function myPlaces(){
     const LegendToggleBtn = document.getElementById('legend-toggle-btn');
     const mapLegend = document.getElementById('map-legend');
     const toggleButtons = document.querySelectorAll(".btn-toggle");
+    const placeForm = document.getElementById('place-form');
 
     let isLegendVisible = true;
     let hideTimeout;
+
+    // Clean the PlaceForm
+    function cleanPlaceForm(form){
+        form.reset();
+        document.getElementById("place-longitude").value = '';
+        document.getElementById("place-latitude").value = '';
+        document.getElementById("place-longlat").textContent = '';
+        document.getElementById("place-altitude").textContent = '';
+        document.getElementById("place-country-iso").value = '';
+        document.getElementById("place-country-name").value = '';
+        document.getElementById("place-city-name").value = '';
+        document.getElementById("place-country-flag").className = "";
+        document.getElementById("place-country-tooltip").removeAttribute("title");
+        document.getElementById("place-address").textContent = '';
+        document.getElementById("place-category-id").value = '';
+        //document.getElementById("place-category-tooltip").removeAttribute("title");
+        document.getElementById("place-name-display").innerHTML = "";
+        document.getElementById("place-name").value = '';
+        document.getElementById("detail-place-info").classList.add("hidden");
+        placeForm.classList.add('d-none');
+    }
+
+    // Add point to route
+    function submitPlaceForm(event) {
+        event.preventDefault();
+
+        const placeForm = event.target;
+        const formData = new FormData(placeForm);
+
+        fetch('/add_point_to_route/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Add point to the Route (template)
+                const routeBlock = document.getElementById('route-points');
+                const newPoint = document.createElement('div');
+                newPoint.className = 'point-item card mb-2 p-2 shadow-sm';
+                newPoint.setAttribute('data-point-id', data.place_info.id);
+
+                // Create a wrapper for the point
+                const cardBody = document.createElement('div');
+                cardBody.className = 'card-body p-2 d-flex align-items-center gap-2';
+
+                // Create an inner block for the card body
+                const placeIcon = document.createElement('span');
+                placeIcon.className = 'icon-category';
+                placeIcon.textContent = data.place_info.icon;
+
+                const cardTitle = document.createElement('h6');
+                cardTitle.className = 'card-title mb-1';
+                cardTitle.textContent = data.place_info.name;
+
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'btn btn-link text-secondary p-1 position-absolute top-0 end-0';
+
+                const delIcon = document.createElement('i');
+                delIcon.className = 'bi bi-trash';
+                deleteButton.appendChild(delIcon);
+                deleteButton.addEventListener('click', () => {deletePointFromRoute(data.place_info.id);});
+
+                // Adding a card body block to the card
+                cardBody.appendChild(placeIcon);
+                cardBody.appendChild(cardTitle);
+                cardBody.appendChild(deleteButton);
+                newPoint.appendChild(cardBody);
+
+                // Add a card to the main block
+                routeBlock.appendChild(newPoint);
+
+                // Clean the form
+                cleanPlaceForm(placeForm);
+            } else {
+                alert('Error adding point: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
     // Find Elevation with coordinates
     async function getElevation(lat, lon) {
@@ -37,6 +147,7 @@ function myPlaces(){
         try {
             const response = await fetch(url);
             const data = await response.json();
+            //console.log("data:", data);
             return {
                 country: data.address?.country,
                 city: data.address?.city || data.address?.town,
@@ -58,7 +169,7 @@ function myPlaces(){
         const routeMainBlock = document.getElementById("route-main-block");
         const editButton = document.getElementById("edit-name-btn");
 
-        //Place Name
+        // Place Name
         const nameDisplayEl = document.getElementById("place-name-display");
         const nameInputEl = document.getElementById("place-name");
 
@@ -75,6 +186,7 @@ function myPlaces(){
             }
             return '';
         }
+        // format date
         function formattedDateTime(){
             const now = new Date();
             const year = now.getFullYear();
@@ -92,8 +204,8 @@ function myPlaces(){
             const cityName = place.category.city || location.city || '';
             const countryCode = location.countryCode || '';
             const categoryValue = location.category;
-            const categoryId = categoriesData.find(cat => cat.value === categoryValue).id;
-            //const categoryEmoji = categoriesData.find(cat => cat.value === categoryValue)?.emoji || "";
+            const category = categoriesData.find(cat => cat.value === categoryValue);
+            const categoryId = category ? category.id : null;
             const address = location.road + ' ' + location.house_number + ', ' + cityName + ' ' + location.postcode + ', ' + countryName;
 
             // Altitude + Longitude + Latitude
@@ -115,14 +227,14 @@ function myPlaces(){
 
             // Category
             document.getElementById("place-category-id").value = categoryId;
-            //document.getElementById("place-category").textContent = `${categoryEmoji}`;
-            //document.getElementById("place-category-tooltip").setAttribute("title", categoryValue.charAt(0).toUpperCase() + categoryValue.slice(1));
         });
+
+        // Date
         document.getElementById("place-datetime-picker").value = formattedDateTime();
-        nameDisplayEl.textContent = place.name;
-        document.getElementById("place-description").value = "";
 
         // Edit Place Name
+        nameDisplayEl.textContent = place.name;
+        nameInputEl.value = place.name;
         editButton.addEventListener("click", () => {
             // Toggle Edit Mode
             if (nameInputEl.classList.contains("d-none")) {
@@ -141,39 +253,7 @@ function myPlaces(){
 
         // Show detailBlock
         detailBlock.classList.remove("hidden");
-        routeMainBlock.classList.remove("hidden");
-
-        // Submit. Add point to route
-        document.getElementById('place-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            nameInputEl.value = nameDisplayEl.textContent;
-
-            //console.log("Form Data:", Object.fromEntries(formData.entries()));
-
-            fetch('/add_point_to_route/', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Add point to Route
-                    const routeBlock = document.getElementById('route-main-block');
-                    const newPoint = document.createElement('div');
-                    newPoint.className = 'point-item';
-                    newPoint.textContent = data.point_name;
-                    routeBlock.appendChild(newPoint);
-                } else {
-                    alert('Error adding point: ' + data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
+        placeForm.classList.remove('d-none');
     }
 
     // location determination
@@ -289,7 +369,6 @@ function myPlaces(){
 
                 // Marker Click Handle
                 marker.on('click', () => {displayPlaceInfo(place);});
-                //marker.on('mouseout', hidePlaceInfo);
 
                 marker.addTo(map);
                 markers.push(marker);
@@ -382,10 +461,12 @@ function myPlaces(){
 
     LegendToggleBtn.addEventListener('click', hideShowMapLegend);
 
-
     toggleButtons.forEach(button => {
         button.addEventListener("click", () => {collapseSidebarGroup(button);});
     });
+
+    // Submit -> Add point to route
+    placeForm.addEventListener('submit', submitPlaceForm);
 }
 
 // Changing Avatar's icon. Page Register and Profile
