@@ -185,7 +185,6 @@ def reverse_geocode(request):
     except requests.RequestException as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 @login_required
 def delete_point_from_route(request, point_id):
     if request.method == "DELETE":
@@ -240,3 +239,42 @@ def add_point_to_route(request):
         # Return new Point for update route-main-block
         return JsonResponse({'success': True, 'place_info': place_info, 'route_info': model_to_dict(route)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+@login_required
+def get_point(request, point_id):
+    try:
+        place = Place.objects.get(id=point_id, route__user=request.user)
+        data = {
+            'id': place.id,
+            'name': place.name,
+            'longitude': place.longitude,
+            'latitude': place.latitude,
+            'description': place.description,
+            'dt': place.dt.strftime("%Y-%m-%dT%H:%M") if place.dt else '',
+            'category_id': place.category_id,
+            'country': place.country,
+            'countryISO': place.countryISO,
+            'city': place.city,
+            'altitude': place.altitude,
+        }
+        return JsonResponse({'success': True, 'place': data})
+    except Place.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Place not found'})
+
+@login_required
+def update_point(request, point_id):
+    if request.method == 'POST':
+        try:
+            place = Place.objects.get(id=point_id, route__user=request.user)
+            place.name = request.POST.get('placeName')
+            place.longitude = request.POST.get('placeLongitude')
+            place.latitude = request.POST.get('placeLatitude')
+            place.dt = request.POST.get('placeDt')
+            place.description = request.POST.get('placeDescription')
+            place.category_id = request.POST.get('placeCategoryId')
+            place.save()
+
+            return JsonResponse({'success': True, 'place': {'id': place.id, 'name': place.name}})
+        except Place.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Place not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})

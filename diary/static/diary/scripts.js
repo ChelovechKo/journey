@@ -1,3 +1,5 @@
+let editingPlaceId = null;
+
 function getCSRFToken() {
     const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]');
     return csrfToken ? csrfToken.value : '';
@@ -33,9 +35,30 @@ function myPlaces(){
     const mapLegend = document.getElementById('map-legend');
     const toggleButtons = document.querySelectorAll(".btn-toggle");
     const placeForm = document.getElementById('place-form');
+    const routePoints = document.getElementById('route-points');
+    const submitPlaceButton = placeForm.querySelector('button[type="submit"]');
 
     let isLegendVisible = true;
     let hideTimeout;
+
+    // Click on the Point Card to edit info
+    function handlePointClick(e) {
+        const pointCard = e.target.closest('.point-item');
+        if (!pointCard) return;
+
+        const pointId = pointCard.getAttribute('data-point-id');
+
+        fetch(`/get_point/${pointId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayPlaceInfo(data.place, false);
+                } else {
+                    alert('Failed to load point data');
+                }
+            })
+            .catch(error => console.error('Error loading point:', error));
+    }
 
     // Clean the PlaceForm
     function cleanPlaceForm(form){
@@ -64,61 +87,88 @@ function myPlaces(){
 
         const placeForm = event.target;
         const formData = new FormData(placeForm);
+        formData.append('placeId', editingPlaceId);
 
-        fetch('/add_point_to_route/', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Add point to the Route (template)
-                const routeBlock = document.getElementById('route-points');
-                const newPoint = document.createElement('div');
-                newPoint.className = 'point-item card mb-2 p-2 shadow-sm';
-                newPoint.setAttribute('data-point-id', data.place_info.id);
+        if(submitPlaceButton.textContent === 'Edit Point'){
+            fetch(`/update_point/${editingPlaceId}/`, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-CSRFToken': getCSRFToken() }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Clean the form
+                            cleanPlaceForm(placeForm);
 
-                // Create a wrapper for the point
-                const cardBody = document.createElement('div');
-                cardBody.className = 'card-body p-2 d-flex align-items-center gap-2';
+                            submitPlaceButton.textContent = 'Add Point to Route';
+                            editingPlaceId = null;
 
-                // Create an inner block for the card body
-                const placeIcon = document.createElement('span');
-                placeIcon.className = 'icon-category';
-                placeIcon.textContent = data.place_info.icon;
+                            // Renew UI
+                            document.querySelector(`[data-point-id="${data.place.id}"] .card-title`).textContent = data.place.name;
+                        } else {
+                            alert('Error updating point');
+                        }
+                    })
+                    .catch(error => console.error('Error updating point:', error));
+        }
+        else {
+            fetch('/add_point_to_route/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Add point to the Route (template)
+                        const newPoint = document.createElement('div');
+                        newPoint.className = 'point-item card mb-2 p-2 shadow-sm';
+                        newPoint.setAttribute('data-point-id', data.place_info.id);
 
-                const cardTitle = document.createElement('h6');
-                cardTitle.className = 'card-title mb-1';
-                cardTitle.textContent = data.place_info.name;
+                        // Create a wrapper for the point
+                        const cardBody = document.createElement('div');
+                        cardBody.className = 'card-body p-2 d-flex align-items-center gap-2';
 
-                const deleteButton = document.createElement('button');
-                deleteButton.type = 'button';
-                deleteButton.className = 'btn btn-link text-secondary p-1 position-absolute top-0 end-0';
+                        // Create an inner block for the card body
+                        const placeIcon = document.createElement('span');
+                        placeIcon.className = 'icon-category';
+                        placeIcon.textContent = data.place_info.icon;
 
-                const delIcon = document.createElement('i');
-                delIcon.className = 'bi bi-trash';
-                deleteButton.appendChild(delIcon);
-                deleteButton.addEventListener('click', () => {deletePointFromRoute(data.place_info.id);});
+                        const cardTitle = document.createElement('h6');
+                        cardTitle.className = 'card-title mb-1';
+                        cardTitle.textContent = data.place_info.name;
 
-                // Adding a card body block to the card
-                cardBody.appendChild(placeIcon);
-                cardBody.appendChild(cardTitle);
-                cardBody.appendChild(deleteButton);
-                newPoint.appendChild(cardBody);
+                        const deleteButton = document.createElement('button');
+                        deleteButton.type = 'button';
+                        deleteButton.className = 'btn btn-link text-secondary p-1 position-absolute top-0 end-0';
 
-                // Add a card to the main block
-                routeBlock.appendChild(newPoint);
+                        const delIcon = document.createElement('i');
+                        delIcon.className = 'bi bi-trash';
+                        deleteButton.appendChild(delIcon);
+                        deleteButton.addEventListener('click', () => {
+                            deletePointFromRoute(data.place_info.id);
+                        });
 
-                // Clean the form
-                cleanPlaceForm(placeForm);
-            } else {
-                alert('Error adding point: ' + data.error);
-            }
-        })
-        .catch(error => console.error('Error:', error));
+                        // Adding a card body block to the card
+                        cardBody.appendChild(placeIcon);
+                        cardBody.appendChild(cardTitle);
+                        cardBody.appendChild(deleteButton);
+                        newPoint.appendChild(cardBody);
+
+                        // Add a card to the main block
+                        routePoints.appendChild(newPoint);
+
+                        // Clean the form
+                        cleanPlaceForm(placeForm);
+                    } else {
+                        alert('Error adding point: ' + data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
     }
 
     // Find Elevation with coordinates
@@ -164,7 +214,7 @@ function myPlaces(){
     }
 
     // If Marker Click Handle than show details
-    function displayPlaceInfo(place) {
+    function displayPlaceInfo(place, isNew = true) {
         const detailBlock = document.getElementById("detail-place-info");
         const routeMainBlock = document.getElementById("route-main-block");
         const editButton = document.getElementById("edit-name-btn");
@@ -198,39 +248,61 @@ function myPlaces(){
             return `${year}-${month}-${day}T${hours}:${minutes}`;
         }
 
-        // Fill detailBlock
-        reverseGeocode(place.lat, place.lng).then(location => {
-            const countryName = place.category.country || location.country || '';
-            const cityName = place.category.city || location.city || '';
-            const countryCode = location.countryCode || '';
-            const categoryValue = location.category;
-            const category = categoriesData.find(cat => cat.value === categoryValue);
-            const categoryId = category ? category.id : null;
-            const address = location.road + ' ' + location.house_number + ', ' + cityName + ' ' + location.postcode + ', ' + countryName;
+        if(isNew) {
+            // Fill detailBlock
+            reverseGeocode(place.lat, place.lng).then(location => {
+                const countryName = place.category.country || location.country || '';
+                const cityName = place.category.city || location.city || '';
+                const countryCode = location.countryCode || '';
+                const categoryValue = location.category;
+                const category = categoriesData.find(cat => cat.value === categoryValue);
+                const categoryId = category ? category.id : null;
+                const address = location.road + ' ' + location.house_number + ', ' + cityName + ' ' + location.postcode + ', ' + countryName;
 
-            // Altitude + Longitude + Latitude
-            document.getElementById("place-longitude").value = place.lng;
-            document.getElementById("place-latitude").value = place.lat;
-            document.getElementById("place-longlat").textContent = formatCoordinates(place.lng, place.lat);
-            getElevation(place.lat, place.lng).then(elevation => {
-                document.getElementById("place-altitude").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
+                // Altitude + Longitude + Latitude
+                document.getElementById("place-longitude").value = place.lng;
+                document.getElementById("place-latitude").value = place.lat;
+                document.getElementById("place-longlat").textContent = formatCoordinates(place.lng, place.lat);
+                getElevation(place.lat, place.lng).then(elevation => {
+                    document.getElementById("place-altitude").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
+                });
+
+                // Country + City
+                document.getElementById("place-country-iso").value = countryCode;
+                document.getElementById("place-country-name").value = countryName;
+                document.getElementById("place-city-name").value = cityName;
+
+                document.getElementById("place-country-flag").className = `flag-icon flag-icon-${countryCode.toLowerCase()}`;
+                document.getElementById("place-country-tooltip").setAttribute("title", countryName);
+                document.getElementById("place-address").textContent = address;
+
+                // Category
+                document.getElementById("place-category-id").value = categoryId;
+
+                // Date
+                document.getElementById("place-datetime-picker").value = formattedDateTime();
             });
 
-            // Country + City
-            document.getElementById("place-country-iso").value = countryCode;
-            document.getElementById("place-country-name").value = countryName;
-            document.getElementById("place-city-name").value = cityName;
+            // Button "Edit" -> "Add"
+            submitPlaceButton.textContent = 'Add Point to Route';
+        }
+        else {
+            document.getElementById('place-name').value = place.name || '';
+            document.getElementById('place-longitude').value = place.longitude || '';
+            document.getElementById('place-latitude').value = place.latitude || '';
+            document.getElementById("place-longlat").textContent = formatCoordinates(place.longitude, place.latitude);
+            document.getElementById('place-datetime-picker').value = place.dt || '';
+            document.getElementById('place-description').value = place.description || '';
+            document.getElementById('place-category-id').value = place.category_id || '';
+            document.getElementById('place-country-iso').value = place.countryISO || '';
+            document.getElementById('place-country-name').value = place.country || '';
+            document.getElementById('place-city-name').value = place.city || '';
+            document.getElementById('place-altitude').textContent =  `⛰️ ${place.altitude !== null ? `${place.altitude} ` : '?'} m`;
 
-            document.getElementById("place-country-flag").className = `flag-icon flag-icon-${countryCode.toLowerCase()}`;
-            document.getElementById("place-country-tooltip").setAttribute("title", countryName);
-            document.getElementById("place-address").textContent = address;
-
-            // Category
-            document.getElementById("place-category-id").value = categoryId;
-        });
-
-        // Date
-        document.getElementById("place-datetime-picker").value = formattedDateTime();
+            // Button "Add" -> "Edit"
+            submitPlaceButton.textContent = 'Edit Point';
+            editingPlaceId = place.id;
+        }
 
         // Edit Place Name
         nameDisplayEl.textContent = place.name;
@@ -464,6 +536,9 @@ function myPlaces(){
     toggleButtons.forEach(button => {
         button.addEventListener("click", () => {collapseSidebarGroup(button);});
     });
+
+    // Click on the Point Card to edit info
+    routePoints.addEventListener('click', handlePointClick);
 
     // Submit -> Add point to route
     placeForm.addEventListener('submit', submitPlaceForm);
