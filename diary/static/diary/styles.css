@@ -329,3 +329,10 @@ html, body {
     transform: translateY(-3px);
     background-color: #f8f9fa;
 }
+
+/* for drag & drog*/
+.dragging {
+    opacity: 0.6;
+    background-color: #f8f9fa;
+    border: 1px dashed #ccc;
+}

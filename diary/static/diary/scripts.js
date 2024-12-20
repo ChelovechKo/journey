@@ -73,6 +73,7 @@ function myPlaces(){
         document.getElementById("place-country-flag").className = "";
         document.getElementById("place-country-tooltip").removeAttribute("title");
         document.getElementById("place-address").textContent = '';
+        document.getElementById("place-addr").value = '';
         document.getElementById("place-category-id").value = '';
         //document.getElementById("place-category-tooltip").removeAttribute("title");
         document.getElementById("place-name-display").innerHTML = "";
@@ -98,6 +99,7 @@ function myPlaces(){
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
+                            //console.log("data: ", data)
                             // Clean the form
                             cleanPlaceForm(placeForm);
 
@@ -264,7 +266,8 @@ function myPlaces(){
                 document.getElementById("place-latitude").value = place.lat;
                 document.getElementById("place-longlat").textContent = formatCoordinates(place.lng, place.lat);
                 getElevation(place.lat, place.lng).then(elevation => {
-                    document.getElementById("place-altitude").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
+                    document.getElementById("place-altitude").value = elevation;
+                    document.getElementById("place-alt").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
                 });
 
                 // Country + City
@@ -275,6 +278,7 @@ function myPlaces(){
                 document.getElementById("place-country-flag").className = `flag-icon flag-icon-${countryCode.toLowerCase()}`;
                 document.getElementById("place-country-tooltip").setAttribute("title", countryName);
                 document.getElementById("place-address").textContent = address;
+                document.getElementById("place-addr").value = address;
 
                 // Category
                 document.getElementById("place-category-id").value = categoryId;
@@ -297,7 +301,13 @@ function myPlaces(){
             document.getElementById('place-country-iso').value = place.countryISO || '';
             document.getElementById('place-country-name').value = place.country || '';
             document.getElementById('place-city-name').value = place.city || '';
-            document.getElementById('place-altitude').textContent =  `⛰️ ${place.altitude !== null ? `${place.altitude} ` : '?'} m`;
+            document.getElementById('place-alt').textContent =  `⛰️ ${place.altitude !== null ? `${place.altitude} ` : '?'} m`;
+            document.getElementById('place-altitude').value =  place.altitude;
+
+            document.getElementById("place-country-flag").className = `flag-icon flag-icon-${place.countryISO.toLowerCase()}`;
+            document.getElementById("place-country-tooltip").setAttribute("title", place.country);
+            document.getElementById("place-addr").value = place.address || '';
+            document.getElementById("place-address").textContent = place.address;
 
             // Button "Add" -> "Edit"
             submitPlaceButton.textContent = 'Edit Point';
@@ -542,6 +552,43 @@ function myPlaces(){
 
     // Submit -> Add point to route
     placeForm.addEventListener('submit', submitPlaceForm);
+
+    if (routePoints) {
+        // Init SortableJS
+        new Sortable(routePoints, {
+            animation: 150, // smooth animation
+            ghostClass: 'dragging',
+            onEnd: function (event) {
+                // Collect new point order
+                const pointOrder = [];
+                document.querySelectorAll('.point-item').forEach((item, index) => {
+                    pointOrder.push({
+                        id: item.getAttribute('data-point-id'),
+                        order: index + 1 // new order start with 1
+                    });
+                });
+
+                // send new order
+                fetch('/update_point_order/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ order: pointOrder })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // console.log('Order updated successfully!');
+                    } else {
+                        alert('Error updating order: ' + data.error);
+                    }
+                })
+                .catch(error => console.error('Error updating order:', error));
+            }
+        });
+    }
 }
 
 // Changing Avatar's icon. Page Register and Profile

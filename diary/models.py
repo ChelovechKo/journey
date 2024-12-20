@@ -9,7 +9,7 @@ class User(AbstractUser):
     selected_color = models.CharField(max_length=7, null=True, blank=True, default="#6c757d")
 
     def __str__(self):
-        return self.username
+        return f"{self.id}-{self.username}"
 
 
 class MarkerCategory(models.Model):
@@ -18,7 +18,7 @@ class MarkerCategory(models.Model):
     category = models.CharField(max_length=100, unique=True)  # Name of Category (ex, 'Commercial and public places')
 
     def __str__(self):
-        return self.category
+        return f"{self.id}-{self.category}"
 
 
 class MarkerSubCategory(models.Model):
@@ -32,7 +32,7 @@ class MarkerSubCategory(models.Model):
     emoji = models.CharField(max_length=10, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.category.category} - {self.key}:{self.value}"
+        return f"{self.id} - {self.category.category} - {self.key}:{self.value}"
 
 
 class Route(models.Model):
@@ -63,17 +63,19 @@ class Route(models.Model):
     isPublished = models.BooleanField(default=False)  # True - is Published, False - is not
 
     def __str__(self):
-        return self.name
+        return f"{self.id}-{self.name}"
 
 
 class Place(models.Model):
     '''Model for save Places in the Routes'''
     id = models.AutoField(primary_key=True)
+    order = models.PositiveIntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places")
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
     countryISO = models.CharField(max_length=2, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
+    address = models.CharField(max_length=200, null=True, blank=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
     altitude = models.FloatField(null=True, blank=True)
@@ -85,4 +87,7 @@ class Place(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="places", null=True, blank=True)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.id}-{self.name}"
+
+    class Meta:
+        ordering = ['order']  # default: sort by order

@@ -197,7 +197,6 @@ def delete_point_from_route(request, point_id):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-
 @login_required
 def add_point_to_route(request):
     '''After push the AddPointToRoute button'''
@@ -230,7 +229,8 @@ def add_point_to_route(request):
             description=data.get('placeDescription'),
             # isVisited=data.get('placeIsVisited'),
             # cost=data.get('placeCost'),
-            category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None
+            category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None,
+            address=data.get('placeAddress')
         )
 
         place_info = model_to_dict(place)
@@ -256,6 +256,7 @@ def get_point(request, point_id):
             'countryISO': place.countryISO,
             'city': place.city,
             'altitude': place.altitude,
+            'address': place.address
         }
         return JsonResponse({'success': True, 'place': data})
     except Place.DoesNotExist:
@@ -267,14 +268,32 @@ def update_point(request, point_id):
         try:
             place = Place.objects.get(id=point_id, route__user=request.user)
             place.name = request.POST.get('placeName')
-            place.longitude = request.POST.get('placeLongitude')
-            place.latitude = request.POST.get('placeLatitude')
             place.dt = request.POST.get('placeDt')
             place.description = request.POST.get('placeDescription')
-            place.category_id = request.POST.get('placeCategoryId')
             place.save()
 
             return JsonResponse({'success': True, 'place': {'id': place.id, 'name': place.name}})
         except Place.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Place not found'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def update_point_order(request):
+    if request.method == 'POST':
+        try:
+            # get data
+            data = json.loads(request.body)
+            point_order = data.get('order', [])
+
+            # renew point order
+            for item in point_order:
+                place_id = item.get('id')
+                order = item.get('order')
+
+                Place.objects.filter(id=place_id).update(order=order)
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
