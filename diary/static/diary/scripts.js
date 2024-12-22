@@ -5,26 +5,6 @@ function getCSRFToken() {
     return csrfToken ? csrfToken.value : '';
 }
 
-// Delete point in the Route
-function deletePointFromRoute(pointId) {
-    fetch(`/delete_point_from_route/${pointId}/`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRFToken': getCSRFToken(),
-            'Content-Type': 'application/json'
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.querySelector(`[data-point-id="${pointId}"]`).remove();
-        } else {
-            alert('Error deleting point: ' + data.error);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
-
 // Add and Edit Point on the User's Map
 function myPlaces(){
     const map = L.map("map").setView([51.505, -0.09], 2);  // Init Map
@@ -37,27 +17,108 @@ function myPlaces(){
     const placeForm = document.getElementById('place-form');
     const routePoints = document.getElementById('route-points');
     const submitPlaceButton = placeForm.querySelector('button[type="submit"]');
+    const editButton = document.getElementById("edit-name-btn")
+    const nameInputEl = document.getElementById('place-name');
+    const nameDisplayEl = document.getElementById("place-name-display");
+    let userMapMarkers = [];
 
     let isLegendVisible = true;
     let hideTimeout;
 
+    // Renew order on the card
+    function updatePointOrderAfterChange(points) {
+        points.forEach(point => {
+            // In Place's Card
+            const pointCard = document.querySelector(`.point-item[data-point-id="${point.id}"]`);
+            if (pointCard) {
+                pointCard.setAttribute('data-order', point.order);
+                pointCard.querySelector('.badge').textContent = point.order;
+            }
+
+            // In Marker
+            const marker = userMapMarkers[point.id];
+            if (marker) {
+                const markerIcon = L.divIcon({
+                    className: point.isVisited ? 'visited-marker' : 'unvisited-marker',
+                    html: `<div class="marker-icon">#${point.order}</div>`,
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                });
+                marker.setIcon(markerIcon);
+            }
+        });
+    }
+
+    // Delete point in the Route
+    function deletePointFromRoute(event, pointId) {
+        if (event) {
+            event.stopPropagation(); // Stop show Detail place info
+        }
+        fetch(`/delete_point_from_route/${pointId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Delete place's card
+                document.querySelector(`[data-point-id="${pointId}"]`).remove();
+
+                // Delete place's marker
+                map.removeLayer(userMapMarkers[pointId]);
+                delete userMapMarkers[pointId];
+
+                // Renew order on the card
+                updatePointOrderAfterChange(data.places);
+            } else {
+                alert('Error deleting point: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Click on user's marker = click on the place's card
+    function handleMarkerClick(pointId) {
+        const pointCard = document.querySelector(`.point-item[data-point-id="${pointId}"]`);
+        if (pointCard) {
+            // Создаем и отправляем событие "click"
+            const clickEvent = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            });
+            pointCard.dispatchEvent(clickEvent);
+        }
+    }
     // Click on the Point Card to edit info
     function handlePointClick(e) {
-        const pointCard = e.target.closest('.point-item');
+        const clickedElement = e.target;
+        const pointCard = clickedElement.closest('.point-item');
         if (!pointCard) return;
 
         const pointId = pointCard.getAttribute('data-point-id');
 
-        fetch(`/get_point/${pointId}/`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    displayPlaceInfo(data.place, false);
-                } else {
-                    alert('Failed to load point data');
-                }
-            })
-            .catch(error => console.error('Error loading point:', error));
+        // Check, if button
+        if (clickedElement.closest('.btn')) {
+            deletePointFromRoute(event, pointId);
+        }
+        else {
+            map.flyTo(userMapMarkers[pointId].getLatLng(), 13); // fly map to marker
+
+            fetch(`/get_point/${pointId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayPlaceInfo(data.place, false);
+                    } else {
+                        alert('Failed to load point data');
+                    }
+                })
+                .catch(error => console.error('Error loading point:', error));
+        }
     }
 
     // Clean the PlaceForm
@@ -126,42 +187,72 @@ function myPlaces(){
                 .then(data => {
                     if (data.success) {
                         // Add point to the Route (template)
+                        const pointId = data.place_info.id;
                         const newPoint = document.createElement('div');
-                        newPoint.className = 'point-item card mb-2 p-2 shadow-sm';
+                        newPoint.className = 'point-item card mb-1 shadow-sm';
                         newPoint.setAttribute('data-point-id', data.place_info.id);
+                        newPoint.setAttribute('data-latitude', data.place_info.latitude);
+                        newPoint.setAttribute('data-longitude', data.place_info.longitude);
+                        newPoint.setAttribute('data-is-visited', data.place_info.isVisited);
+                        newPoint.setAttribute('data-order', data.place_info.order);
 
-                        // Create a wrapper for the point
+                        // Create the card body
                         const cardBody = document.createElement('div');
-                        cardBody.className = 'card-body p-2 d-flex align-items-center gap-2';
+                        cardBody.className = 'card-body d-flex align-items-center gap-2 position-relative';
 
-                        // Create an inner block for the card body
+                        // Order number
+                        const orderBadge = document.createElement('span');
+                        orderBadge.className = 'badge bg-info position-absolute top-0 start-0';
+                        orderBadge.textContent = data.place_info.order;
+
+                        // Categories icon and name
+                        const infoWrapper = document.createElement('div');
+                        infoWrapper.className = 'd-flex align-items-center w-100 gap-2';
+
                         const placeIcon = document.createElement('span');
                         placeIcon.className = 'icon-category';
                         placeIcon.textContent = data.place_info.icon;
 
                         const cardTitle = document.createElement('h6');
-                        cardTitle.className = 'card-title mb-1';
+                        cardTitle.className = 'card-title mb-0';
                         cardTitle.textContent = data.place_info.name;
 
+                        infoWrapper.appendChild(placeIcon);
+                        infoWrapper.appendChild(cardTitle);
+
+                        // Delete button
                         const deleteButton = document.createElement('button');
                         deleteButton.type = 'button';
-                        deleteButton.className = 'btn btn-link text-secondary p-1 position-absolute top-0 end-0';
+                        deleteButton.className = 'btn btn-link text-secondary position-absolute top-0 end-0';
 
                         const delIcon = document.createElement('i');
                         delIcon.className = 'bi bi-trash';
                         deleteButton.appendChild(delIcon);
-                        deleteButton.addEventListener('click', () => {
-                            deletePointFromRoute(data.place_info.id);
-                        });
 
-                        // Adding a card body block to the card
-                        cardBody.appendChild(placeIcon);
-                        cardBody.appendChild(cardTitle);
+                        // Append all elements to the card body
+                        cardBody.appendChild(orderBadge);
+                        cardBody.appendChild(infoWrapper);
                         cardBody.appendChild(deleteButton);
+
+                        // Append the card body to the main card
                         newPoint.appendChild(cardBody);
 
-                        // Add a card to the main block
+                        // Add the new card to the route points container
                         routePoints.appendChild(newPoint);
+
+                        const markerIcon = L.divIcon({
+                            className: data.place_info.isVisited ? 'visited-marker' : 'unvisited-marker',
+                            html: `<div class="marker-icon">#${data.place_info.order}</div>`,
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41]
+                        });
+
+                        const marker = L.marker([data.place_info.latitude, data.place_info.longitude], { icon: markerIcon }).addTo(map);
+                        marker.bindTooltip(`<strong>${data.place_info.name}</strong>`, { permanent: false, direction: "top", offset: [0, -40] });
+                        userMapMarkers[pointId] = marker;
+                        marker.on('click', () => {
+                            handleMarkerClick(pointId);
+                        });
 
                         // Clean the form
                         cleanPlaceForm(placeForm);
@@ -219,11 +310,6 @@ function myPlaces(){
     function displayPlaceInfo(place, isNew = true) {
         const detailBlock = document.getElementById("detail-place-info");
         const routeMainBlock = document.getElementById("route-main-block");
-        const editButton = document.getElementById("edit-name-btn");
-
-        // Place Name
-        const nameDisplayEl = document.getElementById("place-name-display");
-        const nameInputEl = document.getElementById("place-name");
 
         // format longitude & latitude
         function formatCoordinates(lat, lng) {
@@ -249,6 +335,13 @@ function myPlaces(){
 
             return `${year}-${month}-${day}T${hours}:${minutes}`;
         }
+
+        // Edit Place Name
+        nameInputEl.value = place.name;
+        nameDisplayEl.textContent = place.name;
+        nameInputEl.classList.add("d-none");
+        nameDisplayEl.classList.remove("d-none");
+        editButton.innerHTML = "✏";
 
         if(isNew) {
             // Fill detailBlock
@@ -291,7 +384,6 @@ function myPlaces(){
             submitPlaceButton.textContent = 'Add Point to Route';
         }
         else {
-            document.getElementById('place-name').value = place.name || '';
             document.getElementById('place-longitude').value = place.longitude || '';
             document.getElementById('place-latitude').value = place.latitude || '';
             document.getElementById("place-longlat").textContent = formatCoordinates(place.longitude, place.latitude);
@@ -313,25 +405,6 @@ function myPlaces(){
             submitPlaceButton.textContent = 'Edit Point';
             editingPlaceId = place.id;
         }
-
-        // Edit Place Name
-        nameDisplayEl.textContent = place.name;
-        nameInputEl.value = place.name;
-        editButton.addEventListener("click", () => {
-            // Toggle Edit Mode
-            if (nameInputEl.classList.contains("d-none")) {
-                nameInputEl.classList.remove("d-none");
-                nameDisplayEl.classList.add("d-none");
-                nameInputEl.value = nameDisplayEl.textContent;
-                nameInputEl.focus();
-                editButton.innerHTML = "✅";
-            } else {
-                nameInputEl.classList.add("d-none");
-                nameDisplayEl.classList.remove("d-none");
-                nameDisplayEl.textContent = nameInputEl.value;
-                editButton.innerHTML = "✏";
-            }
-        });
 
         // Show detailBlock
         detailBlock.classList.remove("hidden");
@@ -451,7 +524,6 @@ function myPlaces(){
 
                 // Marker Click Handle
                 marker.on('click', () => {displayPlaceInfo(place);});
-
                 marker.addTo(map);
                 markers.push(marker);
             });
@@ -553,6 +625,22 @@ function myPlaces(){
     // Submit -> Add point to route
     placeForm.addEventListener('submit', submitPlaceForm);
 
+    editButton.addEventListener("click", () => {
+        // Toggle Edit Mode
+        if (nameInputEl.classList.contains("d-none")) {
+            nameInputEl.classList.remove("d-none");
+            nameDisplayEl.classList.add("d-none");
+            nameInputEl.value = nameDisplayEl.textContent;
+            nameInputEl.focus();
+            editButton.innerHTML = "✅";
+        } else {
+            nameInputEl.classList.add("d-none");
+            nameDisplayEl.classList.remove("d-none");
+            nameDisplayEl.textContent = nameInputEl.value;
+            editButton.innerHTML = "✏";
+        }
+    });
+
     if (routePoints) {
         // Init SortableJS
         new Sortable(routePoints, {
@@ -580,13 +668,39 @@ function myPlaces(){
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // console.log('Order updated successfully!');
+                        // Renew order on the card
+                        updatePointOrderAfterChange(data.places);
                     } else {
                         alert('Error updating order: ' + data.error);
                     }
                 })
                 .catch(error => console.error('Error updating order:', error));
             }
+        });
+
+        // for places
+        document.querySelectorAll('.point-item').forEach((point, index) => {
+            const pointId = point.getAttribute('data-point-id');
+            const isVisited = point.getAttribute('data-is-visited') === 'true';
+            const latitude = point.getAttribute('data-latitude');
+            const longitude = point.getAttribute('data-longitude');
+            const order = point.getAttribute('data-order');
+            const pointName = point.querySelector('.card-title').textContent;
+
+            const markerIcon = L.divIcon({
+                className: isVisited ? 'visited-marker' : 'unvisited-marker',
+                html: `<div class="marker-icon">#${order}</div>`,
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            });
+
+            const marker = L.marker([latitude, longitude], { icon: markerIcon }).addTo(map);
+            marker.bindTooltip(`<strong>${pointName}</strong>`, {permanent: false, direction: "top", offset: [0, -40]});
+            userMapMarkers[pointId] = marker;
+
+            marker.on('click', () => {
+                handleMarkerClick(pointId);
+            });
         });
     }
 }

@@ -78,11 +78,24 @@
                 <div class="group-content" id="route-points">
                     {% if places %}
                         {% for place in places %}
-                            <div class="point-item card mb-2 p-2 shadow-sm" data-point-id="{{ place.id }}">
-                                <div class="card-body p-2 d-flex align-items-center gap-2">
-                                    <span class="icon-category">{{ place.icon }}</span>
-                                    <h6 class="card-title mb-1">{{ place.name }}</h6>
-                                    <button type="button" class="btn btn-link text-secondary p-1 position-absolute top-0 end-0" onclick="deletePointFromRoute({{ place.id }})">
+                            <div class="point-item card mb-1 shadow-sm"
+                                 data-point-id="{{ place.id }}"
+                                 data-latitude="{{ place.latitude }}"
+                                 data-longitude="{{ place.longitude }}"
+                                 data-is-visited="{{ place.isVisited }}"
+                                 data-order="{{ place.order }}">
+                                <div class="card-body d-flex align-items-center gap-2 position-relative">
+                                    <!-- Order number -->
+                                    <span class="badge bg-info position-absolute top-0 start-0">
+                                        {{ place.order }}
+                                    </span>
+                                    <!-- Categories icon and name -->
+                                    <div class="d-flex align-items-center w-100 gap-2 p-2">
+                                        <span class="icon-category">{{ place.icon }}</span>
+                                        <h6 class="card-title mb-0">{{ place.name }}</h6>
+                                    </div>
+                                    <!-- Delete button -->
+                                    <button type="button" class="btn btn-link text-secondary position-absolute top-0 end-0"">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>

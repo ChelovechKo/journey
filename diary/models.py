@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import Max
 
 
 class User(AbstractUser):
@@ -69,7 +70,7 @@ class Route(models.Model):
 class Place(models.Model):
     '''Model for save Places in the Routes'''
     id = models.AutoField(primary_key=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places")
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
@@ -87,7 +88,14 @@ class Place(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="places", null=True, blank=True)
 
     def __str__(self):
-        return f"{self.id}-{self.name}"
+        return f"id={self.id}, order={self.order}, name={self.name}"
+
+    def save(self, *args, **kwargs):
+        # auto order from 1 to ...
+        if self.order is None:
+            max_order = Place.objects.filter(route=self.route).aggregate(Max('order'))['order__max'] or 1
+            self.order = max_order + 1
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['order']  # default: sort by order

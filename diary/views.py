@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.core.files.storage import default_storage
 from django.utils import timezone
 from django.forms.models import model_to_dict
+from django.db.models import F
 
 from datetime import datetime
 import json
@@ -148,7 +149,7 @@ def my_places(request):
     places = []
     if route:
         # get route's places
-        for place in Place.objects.filter(route=route):
+        for place in Place.objects.filter(route=route).order_by('order'):
             place_data = model_to_dict(place)
             place_data["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
             places.append(place_data)
@@ -189,9 +190,30 @@ def reverse_geocode(request):
 def delete_point_from_route(request, point_id):
     if request.method == "DELETE":
         try:
-            place = get_object_or_404(Place, id=point_id, route__user=request.user)
+            places = []
+            place = Place.objects.get(id=point_id)
+            route = place.route
             place.delete()
-            return JsonResponse({'success': True, 'message': 'Point deleted successfully.'})
+
+            if not Place.objects.filter(route=route).exists():
+                # reset order
+                Place.objects.filter(route=route).update(order=F('order') - F('order') + 1)
+            else:
+                # renew place's order
+                points = Place.objects.filter(route=route).order_by('order')
+                for index, point in enumerate(points, start=1):
+                    point.order = index
+                    point.save()
+
+                route = Route.objects.filter(user=request.user, isDraft=True).first()
+
+                for place in Place.objects.filter(route=route).order_by('order'):
+                    place_data = model_to_dict(place)
+                    place_data["icon"] = MarkerSubCategory.objects.get(
+                        id=place.category_id).emoji if place.category_id else ""
+                    places.append(place_data)
+
+            return JsonResponse({'success': True, 'message': 'Point deleted successfully.', "places": places})
         except Place.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Point does not exist'})
     else:
@@ -285,14 +307,23 @@ def update_point_order(request):
             data = json.loads(request.body)
             point_order = data.get('order', [])
 
-            # renew point order
-            for item in point_order:
-                place_id = item.get('id')
-                order = item.get('order')
+            # Map point IDs to new orders
+            order_mapping = {item['id']: item['order'] for item in point_order}
 
-                Place.objects.filter(id=place_id).update(order=order)
+            # Update points in the database
+            for point_id, new_order in order_mapping.items():
+                Place.objects.filter(id=point_id).update(order=new_order)
 
-            return JsonResponse({'success': True})
+            route = Route.objects.filter(user=request.user, isDraft=True).first()
+            places = []
+            for place in Place.objects.filter(route=route).order_by('order'):
+                place_data = model_to_dict(place)
+                place_data["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
+                places.append(place_data)
+
+            print(f'places={places}')
+
+            return JsonResponse({'success': True, "places": places})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
