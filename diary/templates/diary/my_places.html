@@ -75,6 +75,14 @@
                 <button type="button" class="btn btn-toggle" aria-label="Toggle">
                     &minus;
                 </button>
+
+                <!-- Get Direction & Save Route Buttons -->
+                <div class="group-content d-flex justify-content-between mb-3">
+                    <button id="get-direction-btn" class="btn btn-primary">Get Direction</button>
+                    <button id="save-route-btn" class="btn btn-secondary">Save Route</button>
+                </div>
+
+                <!-- Point of Route -->
                 <div class="group-content" id="route-points">
                     {% if places %}
                         {% for place in places %}

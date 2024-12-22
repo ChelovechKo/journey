@@ -321,8 +321,6 @@ def update_point_order(request):
                 place_data["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
                 places.append(place_data)
 
-            print(f'places={places}')
-
             return JsonResponse({'success': True, "places": places})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)

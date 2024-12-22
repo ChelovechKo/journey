@@ -20,10 +20,46 @@ function myPlaces(){
     const editButton = document.getElementById("edit-name-btn")
     const nameInputEl = document.getElementById('place-name');
     const nameDisplayEl = document.getElementById("place-name-display");
+    const getDirectionButton = document.getElementById('get-direction-btn');
     let userMapMarkers = [];
 
     let isLegendVisible = true;
     let hideTimeout;
+
+    // Get Direction
+    function buildRoute() {
+        // Collect
+        const points = Array.from(routePoints.querySelectorAll('.point-item')).map(item => ({
+            latitude: parseFloat(item.getAttribute('data-latitude')),
+            longitude: parseFloat(item.getAttribute('data-longitude')),
+            order: parseInt(item.getAttribute('data-order'))
+        }));
+
+        // Sort places
+        points.sort((a, b) => a.order - b.order);
+
+        if (points.length < 2) {
+            alert("Please add at least two points to build a route.");
+            return;
+        }
+
+        // Format waypoints
+        const waypoints = points.map(point => L.latLng(point.latitude, point.longitude));
+
+        // Clean last route
+        if (window.currentRoute) {
+            map.removeControl(window.currentRoute);
+        }
+
+        // Add Route with Leaflet Routing Machine
+        window.currentRoute = L.Routing.control({
+            waypoints: waypoints,
+            routeWhileDragging: true,
+            lineOptions: {
+                styles: [{ color: 'blue', weight: 4 }]
+            }
+        }).addTo(map);
+    }
 
     // Renew order on the card
     function updatePointOrderAfterChange(points) {
@@ -701,6 +737,12 @@ function myPlaces(){
             marker.on('click', () => {
                 handleMarkerClick(pointId);
             });
+        });
+    }
+
+    if (getDirectionButton) {
+        getDirectionButton.addEventListener('click', function () {
+            buildRoute();
         });
     }
 }
