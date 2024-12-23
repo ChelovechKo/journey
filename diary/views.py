@@ -249,7 +249,7 @@ def add_point_to_route(request):
             city=data.get('placeCityName'),
             dt=dt,
             description=data.get('placeDescription'),
-            isVisited=data.get('placeIsVisited'),
+            isVisited=data.get('placeIsVisited') == "on" if data.get('placeIsVisited') else False,
             price=float(data.get('placePrice')) if data.get('placePrice') else 0,
             category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None,
             address=data.get('placeAddress')
@@ -297,6 +297,8 @@ def update_point(request, point_id):
             place.isVisited = request.POST.get('placeIsVisited') == 'on'
             place.price = request.POST.get('placePrice') if request.POST.get('placePrice') else 0
             place.save()
+
+            print(f'')
 
             return JsonResponse({'success': True, 'place': {'id': place.id, 'name': place.name, 'isVisited': place.isVisited, 'order': place.order}})
         except Place.DoesNotExist:

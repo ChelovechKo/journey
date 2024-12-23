@@ -281,12 +281,15 @@ function myPlaces(){
                             submitPlaceButton.textContent = 'Add Point to Route';
                             editingPlaceId = null;
 
+                            console.log("data.place=", data.place);
+                            console.log("data.place.isVisited=", data.place.isVisited);
+
                             // Renew UI
                             const card = document.querySelector(`[data-point-id="${data.place.id}"]`);
                             if (card) {
                                 card.querySelector('.card-title').textContent = data.place.name;
                                 card.setAttribute('data-is-visited', data.place.isVisited);
-                                card.setAttribute('data-is-visited', data.place.price);
+                                card.setAttribute('data-price', data.place.price);
                             }
 
                             // Renew Marker
