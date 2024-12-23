@@ -3,7 +3,7 @@
 {% block body %}
 <div class="page-container">
     <div class="px-3 py-1">
-        <h2>My Places</h2>
+        <h2>New Route</h2>
         <hr>
     </div>
 
@@ -89,7 +89,7 @@
                 <!-- Hidden Button -->
                 <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
 
-                <div class="group-content hidden" id="route-details">
+                <div class="group-content hidden" route-id="{{ route.id }}" id="route-details">
                     <!-- Route Properties -->
                     <!--<div class="d-flex flex-row justify-content-center gap-2 mb-3">
                          Route Type
@@ -111,6 +111,10 @@
 
                         <!-- Right-aligned Route Details -->
                         <div class="d-flex align-items-center gap-2 ms-auto">
+                            <input type="hidden" id="route-distance-save">
+                            <input type="hidden" id="route-duration-save">
+                            <input type="hidden" id="route-price-save">
+
                             <!-- Distance -->
                             <div class="d-flex align-items-center gap-1 ms-auto">
                                 <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
@@ -226,50 +230,7 @@
             {% endfor %}
 
         </div>
-
      </div>
-
-    <!-- Save Route Form> -->
-    <div class="modal fade" id="saveRouteModal" tabindex="-1" aria-labelledby="saveRouteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="saveRouteModalLabel">Save Route</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="saveRouteForm">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="routeName" class="form-label">Route Name</label>
-                            <input type="text" class="form-control" id="routeName" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="routeStartDate" class="form-label">Start Date</label>
-                            <input type="datetime-local" class="form-control" id="routeStartDate" name="start_date">
-                        </div>
-                        <div class="mb-3">
-                            <label for="routeEndDate" class="form-label">End Date</label>
-                            <input type="datetime-local" class="form-control" id="routeEndDate" name="end_date">
-                        </div>
-                        <div class="mb-3">
-                            <label for="routeDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="routeDescription" name="description"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="routePrice" class="form-label">Price</label>
-                            <input type="number" step="0.01" class="form-control" id="routePrice" name="price">
-                        </div>
-                        <div class="mb-3">
-                            <label for="routeDifficulty" class="form-label">Difficulty</label>
-                            <input type="number" min="1" max="5" class="form-control" id="routeDifficulty" name="difficulty">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script type="application/json" id="categories-data"> {{ categories_data|safe }} </script>
 </div>

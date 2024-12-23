@@ -298,9 +298,9 @@ def update_point(request, point_id):
             place.price = request.POST.get('placePrice') if request.POST.get('placePrice') else 0
             place.save()
 
-            print(f'')
+            print(f'place.price={place.price}')
 
-            return JsonResponse({'success': True, 'place': {'id': place.id, 'name': place.name, 'isVisited': place.isVisited, 'order': place.order}})
+            return JsonResponse({'success': True, 'place': {'id': place.id, 'name': place.name, 'isVisited': place.isVisited, 'order': place.order, 'price': place.price}})
         except Place.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Place not found'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
@@ -332,3 +332,43 @@ def update_point_order(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+@login_required
+def save_route(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            route_id = data.get('routeId')
+            distance = data.get('distance')
+            duration = data.get('duration')
+            price = data.get('price')
+
+            route = Route.objects.get(id=route_id)
+            points = Place.objects.filter(route=route).order_by('order')
+            start_point = points.first()
+            end_point = points.last()
+
+            # update route info
+            route.name = start_point.name + ' - ' + end_point.name
+            route.start_date = start_point.dt
+            route.end_date = end_point.dt
+            route.distance = float(distance) if distance else 0
+            route.duration = float(duration) if duration else 0
+            route.price = float(price) if price else 0
+            route.isDraft = False
+            route.save()
+
+            return redirect('route_detail', route_id=route.id)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+
+def route_detail(request, route_id):
+    route = get_object_or_404(Route, id=route_id, user=request.user)
+    places = Place.objects.filter(route=route).order_by('order')
+    return render(request, "diary/route_detail.html", {
+        "route": route,
+        "places": places,
+    })

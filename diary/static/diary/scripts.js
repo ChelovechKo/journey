@@ -28,6 +28,38 @@ function myPlaces(){
     let isLegendVisible = true;
     let hideTimeout;
 
+    // Save Route
+    function saveRouteButtonClick(){
+        const routeDetails = document.getElementById("route-details");
+        const routeId = routeDetails.getAttribute("route-id");
+        const distance = document.getElementById("route-distance-save").value;
+        const duration = document.getElementById("route-duration-save").value;
+        const price = document.getElementById("route-price-save").value;
+
+        const data = {
+            routeId: routeId,
+            distance: distance,
+            duration: duration,
+            price: price
+        };
+
+        fetch("/save_route/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken(),
+            },
+            body: JSON.stringify(data),
+        }).then(response => {
+            if (response.ok) {
+                console.log("Route saved successfully!");
+            } else {
+                console.error("Error saving route:", response.statusText);
+            }
+        })
+        .catch(error => console.error("Error saving route:", error));
+    }
+
     // Get Direction
     function buildRoute() {
         const isCircularRoute = document.getElementById('circular-route').checked;
@@ -45,8 +77,6 @@ function myPlaces(){
             alert("Please add at least two points to build a route.");
             return;
         }
-
-        console.log('points=', points);
 
         // Sort places
         points.sort((a, b) => a.order - b.order);
@@ -108,6 +138,7 @@ function myPlaces(){
             const kilometers = Math.floor(totalDistance / 1000);
             const meters = Math.round(totalDistance % 1000);
             document.getElementById('route-distance').textContent = `${kilometers} km ${meters} m`;
+            document.getElementById('route-distance-save').value = totalDistance.toFixed(2);
 
             // Convert time to days, hours, and minutes
             const totalTime = route.summary.totalTime; // in seconds
@@ -121,11 +152,14 @@ function myPlaces(){
             timeString += `${minutes} mins`;
 
             document.getElementById('route-duration').textContent = timeString;
+            document.getElementById('route-duration-save').value = totalTime;
 
             // Calculate total route price
             const totalPrice = points.reduce((sum, point) => sum + point.price, 0);
 
             document.getElementById('route-price').textContent = `${totalPrice.toFixed(2)}`;
+            document.getElementById('route-price-save').value = totalPrice.toFixed(2);
+
         });
     }
 
@@ -280,9 +314,6 @@ function myPlaces(){
 
                             submitPlaceButton.textContent = 'Add Point to Route';
                             editingPlaceId = null;
-
-                            console.log("data.place=", data.place);
-                            console.log("data.place.isVisited=", data.place.isVisited);
 
                             // Renew UI
                             const card = document.querySelector(`[data-point-id="${data.place.id}"]`);
@@ -798,6 +829,9 @@ function myPlaces(){
             editButton.innerHTML = "✏";
         }
     });
+
+    //Save Route
+    saveRouteButton.addEventListener('click', saveRouteButtonClick);
 
     if (routePoints) {
         // Init SortableJS

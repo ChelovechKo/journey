@@ -18,6 +18,8 @@ urlpatterns = [
     path('get_point/<int:point_id>/', views.get_point, name='get_point'),
     path('update_point/<int:point_id>/', views.update_point, name='update_point'),
     path('update_point_order/', views.update_point_order, name='update_point_order'),
+    path("save_route/", views.save_route, name="save_route"),
+    path('route/<int:route_id>/', views.route_detail, name='route_detail'),
 ]
 
 if settings.DEBUG:
