@@ -8,6 +8,7 @@ function getCSRFToken() {
 // Add and Edit Point on the User's Map
 function myPlaces(){
     const map = L.map("map").setView([51.505, -0.09], 2);  // Init Map
+    const routeDetailsDiv = document.getElementById("route-details");
     const markers = [];
     const categoryIcons = {};
     const categoriesData = JSON.parse(document.getElementById("categories-data").textContent);
@@ -28,23 +29,38 @@ function myPlaces(){
 
     // Get Direction
     function buildRoute() {
-        // Collect
+        const isCircularRoute = document.getElementById('circular-route').checked;
+
+        // Collect points
         const points = Array.from(routePoints.querySelectorAll('.point-item')).map(item => ({
             latitude: parseFloat(item.getAttribute('data-latitude')),
             longitude: parseFloat(item.getAttribute('data-longitude')),
-            order: parseInt(item.getAttribute('data-order'))
+            isVisited: item.getAttribute('data-is-visited') === 'true',
+            pointId: item.getAttribute('data-point-id'),
+            price: parseFloat(item.getAttribute('data-price')) || 0
         }));
-
-        // Sort places
-        points.sort((a, b) => a.order - b.order);
 
         if (points.length < 2) {
             alert("Please add at least two points to build a route.");
             return;
         }
 
+        // Sort places
+        points.sort((a, b) => a.order - b.order);
+
+        // If circular route is enabled, add the first point to the end
+        if (isCircularRoute) {
+            points.push(points[0]); // Add the first point to the end
+        }
+
         // Format waypoints
-        const waypoints = points.map(point => L.latLng(point.latitude, point.longitude));
+        const waypoints = points.map(point => {
+            return L.Routing.waypoint(
+                L.latLng(point.latitude, point.longitude),
+                null, // Optional name
+                { pointId: point.pointId, isVisited: point.isVisited } // Custom options
+            );
+        });
 
         // Clean last route
         if (window.currentRoute) {
@@ -57,8 +73,57 @@ function myPlaces(){
             routeWhileDragging: true,
             lineOptions: {
                 styles: [{ color: 'blue', weight: 4 }]
+            },
+            createMarker: function(i, waypoint) {
+                // i: order
+                // waypoint: point info
+                const pointOrder = i + 1; // order
+                const isVisited = waypoint.options.isVisited || false;
+
+                const markerIcon = L.divIcon({
+                    className: isVisited ? 'visited-marker' : 'unvisited-marker',
+                    html: `<div class="marker-icon">#${pointOrder}</div>`,
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                });
+
+                const marker = L.marker(waypoint.latLng, { icon: markerIcon });
+
+                // Get pointId from waypoint.options
+                const pointId = waypoint.options.pointId;
+                marker.on('click', () => {handleMarkerClick(pointId);});
+
+                return marker;
             }
         }).addTo(map);
+
+        window.currentRoute.on('routesfound', function (e) {
+            const route = e.routes[0];
+
+            // Convert distance to kilometers and meters
+            const totalDistance = route.summary.totalDistance; // in meters
+            const kilometers = Math.floor(totalDistance / 1000);
+            const meters = Math.round(totalDistance % 1000);
+            document.getElementById('route-distance').textContent = `${kilometers} km ${meters} m`;
+
+            // Convert time to days, hours, and minutes
+            const totalTime = route.summary.totalTime; // in seconds
+            const days = Math.floor(totalTime / (24 * 3600));
+            const hours = Math.floor((totalTime % (24 * 3600)) / 3600);
+            const minutes = Math.round((totalTime % 3600) / 60);
+
+            let timeString = '';
+            if (days > 0) timeString += `${days} days `;
+            if (hours > 0) timeString += `${hours} hours `;
+            timeString += `${minutes} mins`;
+
+            document.getElementById('route-duration').textContent = timeString;
+
+            // Calculate total route price
+            const totalPrice = points.reduce((sum, point) => sum + point.price, 0);
+
+            document.getElementById('route-price').textContent = `${totalPrice.toFixed(2)}`;
+        });
     }
 
     // Renew order on the card
@@ -83,9 +148,17 @@ function myPlaces(){
                 marker.setIcon(markerIcon);
             }
         });
+
+        // Reset the existing route and clean route dtails
+        if (window.currentRoute) {
+            map.removeControl(window.currentRoute);
+            window.currentRoute = null;
+        }
+        document.getElementById('route-distance').textContent = '?';
+        document.getElementById('route-duration').textContent = '?';
     }
 
-    // Delete point in the Route
+    // Delete point on the Route
     function deletePointFromRoute(event, pointId) {
         if (event) {
             event.stopPropagation(); // Stop show Detail place info
@@ -163,7 +236,7 @@ function myPlaces(){
         document.getElementById("place-longitude").value = '';
         document.getElementById("place-latitude").value = '';
         document.getElementById("place-longlat").textContent = '';
-        document.getElementById("place-altitude").textContent = '';
+        //document.getElementById("place-altitude").textContent = '';
         document.getElementById("place-country-iso").value = '';
         document.getElementById("place-country-name").value = '';
         document.getElementById("place-city-name").value = '';
@@ -175,7 +248,9 @@ function myPlaces(){
         //document.getElementById("place-category-tooltip").removeAttribute("title");
         document.getElementById("place-name-display").innerHTML = "";
         document.getElementById("place-name").value = '';
-        document.getElementById("detail-place-info").classList.add("hidden");
+        document.getElementById("place-price").value = '';
+        document.getElementById("place-isVisited").checked = false;
+        document.getElementById("place-details").classList.add("hidden");
         placeForm.classList.add('d-none');
     }
 
@@ -196,7 +271,7 @@ function myPlaces(){
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            //console.log("data: ", data)
+                            // console.log("data: ", data)
                             // Clean the form
                             cleanPlaceForm(placeForm);
 
@@ -204,7 +279,24 @@ function myPlaces(){
                             editingPlaceId = null;
 
                             // Renew UI
-                            document.querySelector(`[data-point-id="${data.place.id}"] .card-title`).textContent = data.place.name;
+                            const card = document.querySelector(`[data-point-id="${data.place.id}"]`);
+                            if (card) {
+                                card.querySelector('.card-title').textContent = data.place.name;
+                                card.setAttribute('data-is-visited', data.place.isVisited);
+                                card.setAttribute('data-is-visited', data.place.price);
+                            }
+
+                            // Renew Marker
+                            const marker = userMapMarkers[data.place.id];
+                            if (marker) {
+                                const markerIcon = L.divIcon({
+                                    className: data.place.isVisited ? 'visited-marker' : 'unvisited-marker',
+                                    html: `<div class="marker-icon">#${data.place.order}</div>`,
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41]
+                                });
+                                marker.setIcon(markerIcon);
+                            }
                         } else {
                             alert('Error updating point');
                         }
@@ -230,6 +322,7 @@ function myPlaces(){
                         newPoint.setAttribute('data-latitude', data.place_info.latitude);
                         newPoint.setAttribute('data-longitude', data.place_info.longitude);
                         newPoint.setAttribute('data-is-visited', data.place_info.isVisited);
+                        newPoint.setAttribute('data-price', data.place_info.price);
                         newPoint.setAttribute('data-order', data.place_info.order);
 
                         // Create the card body
@@ -301,7 +394,7 @@ function myPlaces(){
     }
 
     // Find Elevation with coordinates
-    async function getElevation(lat, lon) {
+    /*async function getElevation(lat, lon) {
         const url = `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`;
 
         return fetch(url)
@@ -318,7 +411,7 @@ function myPlaces(){
                 console.error('Error fetching elevation:', error);
                 return '';
             });
-    }
+    }*/
 
     // Get geo-info with coordinates
     async function reverseGeocode(lat, lng) {
@@ -344,8 +437,7 @@ function myPlaces(){
 
     // If Marker Click Handle than show details
     function displayPlaceInfo(place, isNew = true) {
-        const detailBlock = document.getElementById("detail-place-info");
-        const routeMainBlock = document.getElementById("route-main-block");
+        const detailBlock = document.getElementById("place-details");
 
         // format longitude & latitude
         function formatCoordinates(lat, lng) {
@@ -394,10 +486,10 @@ function myPlaces(){
                 document.getElementById("place-longitude").value = place.lng;
                 document.getElementById("place-latitude").value = place.lat;
                 document.getElementById("place-longlat").textContent = formatCoordinates(place.lng, place.lat);
-                getElevation(place.lat, place.lng).then(elevation => {
+                /*getElevation(place.lat, place.lng).then(elevation => {
                     document.getElementById("place-altitude").value = elevation;
                     document.getElementById("place-alt").textContent = `⛰️ ${elevation !== null ? `${elevation} ` : '?'} m`;
-                });
+                });*/
 
                 // Country + City
                 document.getElementById("place-country-iso").value = countryCode;
@@ -414,6 +506,12 @@ function myPlaces(){
 
                 // Date
                 document.getElementById("place-datetime-picker").value = formattedDateTime();
+
+                // Price
+                document.getElementById("place-price").value = '';
+
+                // isVisited
+                document.getElementById("place-isVisited").checked = false;
             });
 
             // Button "Edit" -> "Add"
@@ -429,13 +527,15 @@ function myPlaces(){
             document.getElementById('place-country-iso').value = place.countryISO || '';
             document.getElementById('place-country-name').value = place.country || '';
             document.getElementById('place-city-name').value = place.city || '';
-            document.getElementById('place-alt').textContent =  `⛰️ ${place.altitude !== null ? `${place.altitude} ` : '?'} m`;
-            document.getElementById('place-altitude').value =  place.altitude;
+            //document.getElementById('place-alt').textContent =  `⛰️ ${place.altitude !== null ? `${place.altitude} ` : '?'} m`;
+            //document.getElementById('place-altitude').value =  place.altitude;
 
             document.getElementById("place-country-flag").className = `flag-icon flag-icon-${place.countryISO.toLowerCase()}`;
             document.getElementById("place-country-tooltip").setAttribute("title", place.country);
             document.getElementById("place-addr").value = place.address || '';
             document.getElementById("place-address").textContent = place.address;
+            document.getElementById("place-price").value = place.price || '';
+            document.getElementById("place-isVisited").checked = place.isVisited || false;
 
             // Button "Add" -> "Edit"
             submitPlaceButton.textContent = 'Edit Point';
@@ -579,23 +679,39 @@ function myPlaces(){
             hideTimeout = setTimeout(() => {
                 LegendToggleBtn.style.opacity = "0";
                 LegendToggleBtn.style.visibility = "hidden";
-            }, 500);
+            }, 300);
         }
     }
 
     //Hide/Show Map Legend Handle
     function hideShowMapLegend(){
         const mapContainer = document.getElementById('map-container');
+        const tooltipInstance = bootstrap.Tooltip.getInstance(LegendToggleBtn);
+
         if (isLegendVisible) {
             // Hide Legend
             mapLegend.classList.add('hidden');
             LegendToggleBtn.querySelector('i').classList.replace('fa-chevron-right', 'fa-chevron-left');
             mapContainer.classList.replace('col-md-7', 'col-md-9');
+
+            // Update tooltip to 'Show Map Legend'
+            LegendToggleBtn.setAttribute('title', 'Show Map Legend');
+            if (tooltipInstance) {
+                tooltipInstance.hide(); // Hide current tooltip
+                tooltipInstance.setContent({ '.tooltip-inner': 'Show Map Legend' }); // Update tooltip content
+            }
         } else {
             // Show Legend
             mapLegend.classList.remove('hidden');
             LegendToggleBtn.querySelector('i').classList.replace('fa-chevron-left', 'fa-chevron-right');
             mapContainer.classList.replace('col-md-9', 'col-md-7');
+
+            // Update tooltip to 'Hide Map Legend'
+            LegendToggleBtn.setAttribute('title', 'Hide Map Legend');
+            if (tooltipInstance) {
+                tooltipInstance.hide(); // Hide current tooltip
+                tooltipInstance.setContent({ '.tooltip-inner': 'Hide Map Legend' }); // Update tooltip content
+            }
         }
 
         isLegendVisible = !isLegendVisible;
@@ -717,7 +833,7 @@ function myPlaces(){
         // for places
         document.querySelectorAll('.point-item').forEach((point, index) => {
             const pointId = point.getAttribute('data-point-id');
-            const isVisited = point.getAttribute('data-is-visited') === 'true';
+            const isVisited = point.getAttribute('data-is-visited') === 'True';
             const latitude = point.getAttribute('data-latitude');
             const longitude = point.getAttribute('data-longitude');
             const order = point.getAttribute('data-order');
@@ -738,6 +854,8 @@ function myPlaces(){
                 handleMarkerClick(pointId);
             });
         });
+
+        routeDetailsDiv.classList.remove("hidden");
     }
 
     if (getDirectionButton) {
@@ -837,13 +955,13 @@ function avatarEditing(){
 document.addEventListener('DOMContentLoaded', function() {
     const currentUrl = window.location.href; // current page url
 
-    /*
     // Init ALL tooltip
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            fallbackPlacements: []
+        });
     });
-    */
 
     if(currentUrl.includes('profile') || currentUrl.includes('register')){
         avatarEditing();

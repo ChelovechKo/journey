@@ -141,7 +141,7 @@
 }
 
 html, body {
-    overflow: hidden;
+    /*overflow: hidden;*/
     min-height: 100vh;
     margin: 0;
     padding: 0;
@@ -222,6 +222,32 @@ html, body {
     padding-bottom: 0;
 }
 
+#place-details{
+    opacity: 1;
+    transition: opacity 0.5s ease, max-height 0.5s ease;
+    overflow: hidden;
+}
+
+#place-details.hidden {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+#route-details{
+    opacity: 1;
+    transition: opacity 0.5s ease, max-height 0.5s ease;
+    overflow: hidden;
+}
+
+#route-details.hidden {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 .sidebar-group h5 {
     font-weight: bold;
     margin-bottom: 10px;
@@ -230,36 +256,11 @@ html, body {
     padding-bottom: 5px;
 }
 
-#detail-place-info{
-    opacity: 1;
-    transition: opacity 0.5s ease, max-height 0.5s ease;
-    overflow: hidden;
-}
-
-#detail-place-info.hidden {
-    opacity: 0;
-    max-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
-#route-main-block{
-    opacity: 1;
-    transition: opacity 0.5s ease, max-height 0.5s ease;
-    overflow: hidden;
-}
-
-#route-main-block.hidden {
-    opacity: 0;
-    max-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
 .sidebar-group .group-item {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    margin-top: 8px;
+    margin-bottom: 1rem;
 }
 
 .checkbox-container {
@@ -268,14 +269,14 @@ html, body {
 }
 
 /* Checkbox */
-.sidebar-group label {
+.sidebar-group form-check-label {
     display: block;
     margin: 5px 0;
     font-size: 14px;
     cursor: pointer;
 }
 
-.sidebar-group input[type="checkbox"] {
+.sidebar-group form-check-input[type="checkbox"] {
     margin-right: 8px;
 }
 
@@ -288,7 +289,6 @@ html, body {
 #route-points {
     max-height: 600px;
     overflow-y: auto;
-    padding-right: 5px;
 }
 
 /*Map Legend animation*/

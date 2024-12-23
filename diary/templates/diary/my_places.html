@@ -10,23 +10,36 @@
     <!-- Map and Legend -->
     <div class="route-map-legend row g-0">
         <!-- Planning route -->
-        <div class="col-md-3 col-12 bg-light p-3 sidebar" id="create-route">
+        <div class="col-md-3 col-12 bg-light p-3 sidebar" id="left-sidebar">
             <div class="sidebar-group position-relative">
-                <h5 class="group-title">Detail Place Info</h5>
-                <button type="button" class="btn btn-toggle" aria-label="Toggle">
-                    &minus;
-                </button>
-                <div class="group-content hidden" id="detail-place-info">
+                <!-- Group Title -->
+                <h5 class="group-title">Place Details</h5>
+                <!-- Hidden Button -->
+                <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
+                <div class="group-content hidden" id="place-details">
                     <form method="post" id="place-form" class="d-none">
                         {% csrf_token %}
                         
                         <!-- Altitude + Longitude + Latitude -->
                         <input type="hidden" id="place-longitude" name="placeLongitude">
                         <input type="hidden" id="place-latitude" name="placeLatitude">
-                        <input type="hidden" id="place-altitude" name="placeAltitude">
-                        <div class="group-item">
-                            <div id="place-alt"></div>
-                            <div id="place-longlat" class="small ms-auto"></div>
+                        <!--<input type="hidden" id="place-altitude" name="placeAltitude">-->
+                        <div class="group-item gap-2">
+                            <!--<div id="place-alt"></div>-->
+
+                            <!-- Checkbox for Visited -->
+                            <div class="d-flex align-items-center gap-1">
+                                <span data-bs-toggle="tooltip" data-bs-placement="top" title="Visited?">🏁</span>
+                                <input type="checkbox" id="place-isVisited" name="placeIsVisited">
+                            </div>
+
+                            <!-- Input for Price -->
+                            <div class="d-flex align-items-center gap-1">
+                                <span data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
+                                <input type="text" id="place-price" name="placePrice" class="form-control form-control-sm" style="width: 70px;">
+                            </div>
+
+                            <div id="place-longlat" class="small text-nowrap ms-auto"></div>
                         </div>
             
                         <!-- Country + Address -->
@@ -51,7 +64,7 @@
             
                         <!-- Date & Time -->
                         <div class="group-item">
-                            <label class="me-1">Date of visit:</label>
+                            <label class="me-1">Visit Date:</label>
                             <input type="datetime-local" id="place-datetime-picker" class="form-control w-auto" name="placeDt">
                         </div>
             
@@ -70,48 +83,92 @@
                 </div>
             </div>
         
-            <div class="sidebar-group position-relative" id="route-main-block">
-                <h5 class="group-title">Create your route</h5>
-                <button type="button" class="btn btn-toggle" aria-label="Toggle">
-                    &minus;
-                </button>
+            <div class="sidebar-group position-relative">
+                <!-- Group Title -->
+                <h5 class="group-title">Route Details</h5>
+                <!-- Hidden Button -->
+                <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
 
-                <!-- Get Direction & Save Route Buttons -->
-                <div class="group-content d-flex justify-content-between mb-3">
-                    <button id="get-direction-btn" class="btn btn-primary">Get Direction</button>
-                    <button id="save-route-btn" class="btn btn-secondary">Save Route</button>
-                </div>
+                <div class="group-content hidden" id="route-details">
+                    <!-- Route Properties -->
+                    <!--<div class="d-flex flex-row justify-content-center gap-2 mb-3">
+                         Route Type
+                        <div class="d-flex align-items-center">
+                            <select id="route-type" class="form-select form-select-sm w-auto">
+                                <option value="driving">🚗 Driving</option>
+                                <option value="walking">🚶 Walking</option>
+                                <option value="cycling">🚴 Cycling</option>
+                            </select>
+                        </div>
+                    </div>-->
 
-                <!-- Point of Route -->
-                <div class="group-content" id="route-points">
-                    {% if places %}
-                        {% for place in places %}
-                            <div class="point-item card mb-1 shadow-sm"
-                                 data-point-id="{{ place.id }}"
-                                 data-latitude="{{ place.latitude }}"
-                                 data-longitude="{{ place.longitude }}"
-                                 data-is-visited="{{ place.isVisited }}"
-                                 data-order="{{ place.order }}">
-                                <div class="card-body d-flex align-items-center gap-2 position-relative">
-                                    <!-- Order number -->
-                                    <span class="badge bg-info position-absolute top-0 start-0">
-                                        {{ place.order }}
-                                    </span>
-                                    <!-- Categories icon and name -->
-                                    <div class="d-flex align-items-center w-100 gap-2 p-2">
-                                        <span class="icon-category">{{ place.icon }}</span>
-                                        <h6 class="card-title mb-0">{{ place.name }}</h6>
-                                    </div>
-                                    <!-- Delete button -->
-                                    <button type="button" class="btn btn-link text-secondary position-absolute top-0 end-0"">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <!-- Left-aligned Circular Route -->
+                        <div class="d-flex align-items-center justify-content-start gap-1">
+                            <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Circular Route">🔄</span>
+                            <input type="checkbox" id="circular-route" name="circularRoute">
+                        </div>
+
+                        <!-- Right-aligned Route Details -->
+                        <div class="d-flex align-items-center gap-2 ms-auto">
+                            <!-- Price -->
+                            <div class="d-flex align-items-center gap-1 ms-auto">
+                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
+                                <span id="route-price" class="text-muted small">?</span>
                             </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-muted">No points added yet.</div>
-                    {% endif %}
+                            
+                            <!-- Distance -->
+                            <div class="d-flex align-items-center gap-1 ms-auto">
+                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
+                                <span id="route-distance" class="text-muted small">?</span>
+                            </div>
+
+                            <!-- Duration -->
+                            <div class="d-flex align-items-center gap-1 ms-auto">
+                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration">🕒</span>
+                                <span id="route-duration" class="text-muted small">?</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons Get Direction & Save Route -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <button id="get-direction-btn" class="btn btn-primary">Build Route</button>
+                        <button id="save-route-btn" class="btn btn-secondary">Save Route</button>
+                    </div>
+
+                    <!-- Route Points -->
+                    <div id="route-points">
+                        {% if places %}
+                            {% for place in places %}
+                                <div class="point-item card mb-1 shadow-sm"
+                                     data-point-id="{{ place.id }}"
+                                     data-latitude="{{ place.latitude }}"
+                                     data-longitude="{{ place.longitude }}"
+                                     data-is-visited="{{ place.isVisited }}"
+                                     data-price="{{ place.price }}"
+                                     data-order="{{ place.order }}">
+                                    <div class="card-body d-flex align-items-center gap-2 position-relative">
+                                        <!-- Order number -->
+                                        <span class="badge bg-info position-absolute top-0 start-0">
+                                            {{ place.order }}
+                                        </span>
+                                        <!-- Categories icon and name -->
+                                        <div class="d-flex align-items-center w-100 gap-2 p-2">
+                                            <span class="icon-category">{{ place.icon }}</span>
+                                            <h6 class="card-title mb-0">{{ place.name }}</h6>
+                                        </div>
+                                        <!-- Delete button -->
+                                        <button type="button" class="btn btn-link text-secondary position-absolute top-0 end-0">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-muted">No points added yet.</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>            
         </div>
@@ -132,9 +189,9 @@
         <div class="col-md-2 col-12 bg-light sidebar legend" id="map-legend">
 
             <!-- My Places -->
-            <div class="sidebar-group">
+            <!--<div class="sidebar-group">
                 <h5>My Places</h5>
-                <!--
+
                  <div class="checkbox-container">
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="visited">
@@ -145,12 +202,12 @@
                         <label class="form-check-label" for="planned">Planned</label>
                     </div>
                  </div>
-                 -->
-            </div>
+
+            </div>-->
 
             <!-- Categories -->
             {% for category in categories %}
-                <div class="sidebar-group mt-3">
+                <div class="sidebar-group">
                     <h5>{{ category.category }}</h5>
                     <div class="checkbox-container">
                         {% for subcategory in category.subcategories.all %}

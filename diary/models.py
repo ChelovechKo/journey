@@ -51,14 +51,14 @@ class Route(models.Model):
     name = models.CharField(max_length=255)
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
-    route_type = models.CharField(max_length=20, choices=ROUTE_TYPES, null=True, blank=True)
+    #route_type = models.CharField(max_length=20, choices=ROUTE_TYPES, null=True, blank=True)
     rating = models.PositiveSmallIntegerField(null=True, blank=True)  # from 1 to 5
     distance = models.FloatField(null=True, blank=True)  # in meters
     duration = models.PositiveIntegerField(null=True, blank=True)  # in minutes
-    cost = models.FloatField(null=True, blank=True)  # ??? convert ???
+    price = models.FloatField(null=True, blank=True)  # ??? convert ???
     difficulty = models.PositiveSmallIntegerField(null=True, blank=True)  # from 1 to 5
     description = models.TextField(blank=True)
-    elevation_gain = models.FloatField(null=True, blank=True)  # in meters
+    #elevation_gain = models.FloatField(null=True, blank=True)  # in meters
     isPlan = models.BooleanField(default=True)  # True - is in Plan, False - is Finished
     isDraft = models.BooleanField(default=False)  # True - is Draft, False - is Done
     isPublished = models.BooleanField(default=False)  # True - is Published, False - is not
@@ -79,11 +79,11 @@ class Place(models.Model):
     address = models.CharField(max_length=200, null=True, blank=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
-    altitude = models.FloatField(null=True, blank=True)
+    #altitude = models.FloatField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     dt = models.DateTimeField(null=True, blank=True)
     isVisited = models.BooleanField(default=False)
-    cost = models.FloatField(null=True, blank=True)  # ??? convert ???
+    price = models.FloatField(null=True, blank=True, default=0)  # ??? convert ???
     category = models.ForeignKey(MarkerSubCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="places")
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="places", null=True, blank=True)
 
@@ -93,7 +93,7 @@ class Place(models.Model):
     def save(self, *args, **kwargs):
         # auto order from 1 to ...
         if self.order is None:
-            max_order = Place.objects.filter(route=self.route).aggregate(Max('order'))['order__max'] or 1
+            max_order = Place.objects.filter(route=self.route).aggregate(Max('order'))['order__max'] or 0
             self.order = max_order + 1
         super().save(*args, **kwargs)
 

@@ -243,14 +243,14 @@ def add_point_to_route(request):
             name=data.get('placeName', 'New Point'),
             latitude=float(data.get('placeLatitude')) if data.get('placeLatitude') else None,
             longitude=float(data.get('placeLongitude')) if data.get('placeLongitude') else None,
-            altitude=float(data.get('placeAltitude')) if data.get('placeAltitude') else None,
+            #altitude=float(data.get('placeAltitude')) if data.get('placeAltitude') else None,
             country=data.get('placeCountryName'),
             countryISO=data.get('placeCountryISO'),
             city=data.get('placeCityName'),
             dt=dt,
             description=data.get('placeDescription'),
-            # isVisited=data.get('placeIsVisited'),
-            # cost=data.get('placeCost'),
+            isVisited=data.get('placeIsVisited'),
+            price=data.get('placePrice'),
             category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None,
             address=data.get('placeAddress')
         )
@@ -277,8 +277,10 @@ def get_point(request, point_id):
             'country': place.country,
             'countryISO': place.countryISO,
             'city': place.city,
-            'altitude': place.altitude,
-            'address': place.address
+            #'altitude': place.altitude,
+            'address': place.address,
+            'isVisited': place.isVisited,
+            'price': place.price
         }
         return JsonResponse({'success': True, 'place': data})
     except Place.DoesNotExist:
@@ -292,9 +294,11 @@ def update_point(request, point_id):
             place.name = request.POST.get('placeName')
             place.dt = request.POST.get('placeDt')
             place.description = request.POST.get('placeDescription')
+            place.isVisited = request.POST.get('placeIsVisited') == 'on'
+            place.price = request.POST.get('placePrice') if request.POST.get('placePrice') else 0
             place.save()
 
-            return JsonResponse({'success': True, 'place': {'id': place.id, 'name': place.name}})
+            return JsonResponse({'success': True, 'place': {'id': place.id, 'name': place.name, 'isVisited': place.isVisited, 'order': place.order}})
         except Place.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Place not found'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})

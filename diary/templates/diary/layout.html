@@ -26,18 +26,19 @@
             <div class="container-fluid">
                 <a class="navbar-brand">Nomad's Diary</a>
 
-                <!-- Toggler for mobile version -->
+                <!-- Toggler for mobile version 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
-                </button>
+                </button>-->
 
                 <!-- Navigation -->
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">All Routes</a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="#">All Routes</a></li>
+                        {% if user.is_authenticated %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'my-places' %}">New Route</a></li>
+                        {% endif %}
                     </ul>
 
                     <!-- Right angle: registration / user's profile -->
@@ -58,8 +59,6 @@
                                     {% endif %}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                    <li><a class="dropdown-item" href="{% url 'my-places' %}">My Places</a></li>
-                                    <li><a class="dropdown-item" href="#">My Routes</a></li>
                                     <li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Log Out</a></li>
