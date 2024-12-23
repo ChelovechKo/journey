@@ -22,6 +22,7 @@ function myPlaces(){
     const nameInputEl = document.getElementById('place-name');
     const nameDisplayEl = document.getElementById("place-name-display");
     const getDirectionButton = document.getElementById('get-direction-btn');
+    const saveRouteButton = document.getElementById('save-route-btn');
     let userMapMarkers = [];
 
     let isLegendVisible = true;
@@ -35,7 +36,7 @@ function myPlaces(){
         const points = Array.from(routePoints.querySelectorAll('.point-item')).map(item => ({
             latitude: parseFloat(item.getAttribute('data-latitude')),
             longitude: parseFloat(item.getAttribute('data-longitude')),
-            isVisited: item.getAttribute('data-is-visited') === 'true',
+            isVisited: item.getAttribute('data-is-visited').toLowerCase() === 'true',
             pointId: item.getAttribute('data-point-id'),
             price: parseFloat(item.getAttribute('data-price')) || 0
         }));
@@ -44,6 +45,8 @@ function myPlaces(){
             alert("Please add at least two points to build a route.");
             return;
         }
+
+        console.log('points=', points);
 
         // Sort places
         points.sort((a, b) => a.order - b.order);
@@ -833,7 +836,7 @@ function myPlaces(){
         // for places
         document.querySelectorAll('.point-item').forEach((point, index) => {
             const pointId = point.getAttribute('data-point-id');
-            const isVisited = point.getAttribute('data-is-visited') === 'True';
+            const isVisited = point.getAttribute('data-is-visited').toLowerCase() === 'true';
             const latitude = point.getAttribute('data-latitude');
             const longitude = point.getAttribute('data-longitude');
             const order = point.getAttribute('data-order');

@@ -250,7 +250,7 @@ def add_point_to_route(request):
             dt=dt,
             description=data.get('placeDescription'),
             isVisited=data.get('placeIsVisited'),
-            price=data.get('placePrice'),
+            price=float(data.get('placePrice')) if data.get('placePrice') else 0,
             category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None,
             address=data.get('placeAddress')
         )
