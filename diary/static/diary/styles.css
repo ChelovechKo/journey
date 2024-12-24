@@ -377,7 +377,7 @@ html, body {
 }
 
 .fixed-height-card {
-    height: 140px;
+    height: 160px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
