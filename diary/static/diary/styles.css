@@ -385,56 +385,82 @@ html, body {
 }
 
 /* Star Rating */
-#star-rating {
+#rd-star-rating-btn {
     font-size: 30px; /* size */
     color: #ddd; /* default color */
     cursor: pointer;
     display: inline-flex;
 }
 
-#star-rating .star {
+#rd-star-rating-btn .star {
     transition: color 0.2s ease;
 }
 
 /* hover */
-#star-rating .star:hover,
-#star-rating .star:hover ~ .star {
+#rd-star-rating-btn .star:hover,
+#rd-star-rating-btn .star:hover ~ .star {
     color: #ddd; /* reset  */
 }
 
-#star-rating .star:hover ~ .star,
-#star-rating .star.selected ~ .star {
+#rd-star-rating-btn .star:hover ~ .star,
+#rd-star-rating-btn .star.selected ~ .star {
     color: #f0ad4e; /* selected highlight */
 }
 
 /* chosen stars */
-#star-rating .star.selected,
-#star-rating .star.selected ~ .star {
+#rd-star-rating-btn .star.selected,
+#rd-star-rating-btn .star.selected ~ .star {
     color: #ffc107; /* selected color */
 }
 
 /* Boot difficulty */
-#difficulty-rating {
+#rd-difficulty-rating-btn {
     font-size: 30px;
     color: #ddd;
     cursor: pointer;
     display: inline-flex;
 }
 
-#difficulty-rating .boot {
+#rd-difficulty-rating-btn .boot {
     transition: color 0.2s ease;
     filter: brightness(70%);
 }
 
-#difficulty-rating .boot:hover,
-#difficulty-rating .boot:hover ~ .boot {
+#rd-difficulty-rating-btn .boot:hover,
+#rd-difficulty-rating-btn .boot:hover ~ .boot {
     color: #f0ad4e;
     filter: brightness(100%);
 }
 
-#difficulty-rating .boot.selected,
-#difficulty-rating .boot.selected ~ .boot {
+#rd-difficulty-rating-btn .boot.selected,
+#rd-difficulty-rating-btn .boot.selected ~ .boot {
     color: #ffc107;
     filter: brightness(100%);
 }
 
+#rd-completion-toggle-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#rd-completion-toggle-btn:hover {
+    transform: scale(1.2);
+}
+
+#rd-status-toggle-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#rd-status-toggle-btn:hover {
+    transform: scale(1.2);
+}
+
+#rd-name-edit-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#rd-name-edit-btn:hover {
+    transform: scale(1.2);
+}

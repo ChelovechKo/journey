@@ -5,48 +5,40 @@
     <div class="container-lg mt-3 position-relative">
         <!-- Title with badge -->
         <h2 id="page-header" class="d-flex align-items-center position-relative">
+            <!-- Icon change Route Completion -->
             <span class="small me-2"
+                  id="rd-completion-toggle-btn"
                   data-bs-toggle="tooltip"
                   data-bs-placement="top"
-                  title="{% if route.isVisited %}Visited{% else %}Planned{% endif %}">
+                  title="Click to toggle completion">
                 {% if route.isVisited %}🎯{% else %}⏳{% endif %}
             </span>
-            {{ route.name }}
+
+            <!-- Route Name -->
+            <span id="rd-name-display">{{ route.name }}</span>
+            <input type="text" id="rd-name-input" class="form-control d-none w-50" value="{{ route.name }}">
+            <span id="rd-name-edit-btn"
+                  class="ms-2 small"
+                  style="cursor: pointer;"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="Edit route name">
+                ✏️
+            </span>
         
             <!-- Badge on top-right of the title (Published/Saved) -->
-            <div class="dropdown position-absolute top-0 end-0">
-                <span 
-                    class="badge dropdown-toggle 
+            <div class="position-absolute top-0 end-0">
+                <button
+                    class="badge border-0 text-white
                            {% if route.isPublished %} bg-primary
                            {% elif not route.isDraft %} bg-success
-                           {% endif %}" 
-                    id="status-dropdown" 
-                    data-bs-toggle="dropdown" 
-                    aria-expanded="false">
+                           {% endif %}"
+                    id="rd-status-toggle-btn"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Click to toggle status">
                     {% if route.isPublished %}Published{% elif not route.isDraft %}Saved{% endif %}
-                </span>
-                
-                {% if is_owner %}
-                    <ul class="dropdown-menu" aria-labelledby="status-dropdown">
-                        {% if route.isPublished %}
-                            <li>
-                                <a class="dropdown-item text-white bg-success rounded" 
-                                   href="#" 
-                                   id="save-status-btn">
-                                    Save
-                                </a>
-                            </li>
-                        {% else %}
-                            <li>
-                                <a class="dropdown-item text-white bg-primary rounded" 
-                                   href="#" 
-                                   id="publish-status-btn">
-                                    Publish
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                {% endif %}
+                </button>
             </div>
         </h2>
         <hr>
@@ -55,25 +47,32 @@
             <!-- Points Column (10/12) -->
             <div class="col-md-10">
 
+                <!-- Date's create -->
+                <div class="d-flex align-items-center">
+                    <div>
+                        Created on:
+                        <span class="text-muted small">{{ route.created_at|date:"F j, Y" }}</span>
+                    </div>
+                </div>
+
                 <!-- Creator Info -->
                 <div class="mb-4 d-flex align-items-center gap-2">
-                    <span class="fw-bold">Created by:</span>
-                    {% if route.creator_avatar %}
-                        <!-- User's avatar -->
-                        <img src="{{ route.creator_avatar }}"
-                             alt="{{ route.creator_username }}"
+                    <span>Created by:</span>
+                    {% if user.avatar %}
+                        <!-- Users's avatar -->
+                        <img src="{{ user.avatar.url }}"
+                             alt="{{ user.name }}"
                              class="rounded-circle"
-                             style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;"
+                             style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;"
                              data-bs-toggle="tooltip"
-                             data-bs-placement="top"
-                             title="{{ route.creator_username }}">
+                             data-bs-placement="right"
+                             title="{{ user.username }}">
                     {% else %}
-                        <!-- Default user icon -->
-                        <i class="fa fa-user-circle fa-2x text-secondary"
-                           style="cursor: pointer;"
+                        <i class="{% if user.selected_icon %}{{ user.selected_icon }} fa-2x {% else %}fa fa-user-circle fa-2x text-secondary{% endif %}"
+                           style="color: {% if user.selected_icon %}{{ user.selected_color }}{% endif %}; margin-right: 10px;"
                            data-bs-toggle="tooltip"
-                           data-bs-placement="top"
-                           title="{{ route.creator_username }}"></i>
+                           data-bs-placement="right"
+                           title="{{ user.username }}"></i>
                     {% endif %}
                 </div>
 
@@ -101,30 +100,34 @@
                 <h5>Route Overview</h5>
                 <hr class="w-100">
                 
-                <div id="star-rating" class="d-flex">
-                    <span class="star" data-value="1" title="1 Star" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                    <span class="star" data-value="2" title="2 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                    <span class="star" data-value="3" title="3 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                    <span class="star" data-value="4" title="4 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                    <span class="star" data-value="5" title="5 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                <div class="d-flex align-items-center">
+                    <span class="me-2 text-muted small">Rating:</span>
+
+                    <div id="rd-star-rating-btn" class="d-flex">
+                        <span class="star" data-value="1" title="1 Star" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                        <span class="star" data-value="2" title="2 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                        <span class="star" data-value="3" title="3 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                        <span class="star" data-value="4" title="4 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                        <span class="star" data-value="5" title="5 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                    </div>
                 </div>
 
                 <!-- Distance -->
                 <div class="d-flex align-items-center gap-1">
                     <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
-                    <span class="text-muted small">{{ route.form_distance }}</span>
+                    <span class="text-muted small text-nowrap">{{ route.form_distance }}</span>
                 </div>
 
                 <!-- Duration -->
                 <div class="d-flex align-items-center gap-1">
                     <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration">🕒</span>
-                    <span class="text-muted small">{{ route.form_duration }}</span>
+                    <span class="text-muted small text-nowrap">{{ route.form_duration }}</span>
                 </div>
 
                 <!-- Price -->
                 <div class="d-flex align-items-center gap-1">
                     <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
-                    <span class="text-muted small">{{ route.price }}</span>
+                    <span class="text-muted small text-nowrap">{{ route.price }}</span>
                 </div>
 
                 <!-- Start Date -->
@@ -134,7 +137,7 @@
                        data-bs-placement="top"
                        title="Start Date"
                        style="cursor: pointer;"></i>
-                    <input type="datetime-local" id="start-date" name="start-date"
+                    <input type="datetime-local" id="rd-start-date-btn" name="start-date"
                            class="form-control"
                            value="{{ route.start_date|date:'Y-m-d\TH:i' }}">
                 </div>
@@ -146,17 +149,21 @@
                        data-bs-placement="top"
                        title="End Date"
                        style="cursor: pointer;"></i>
-                    <input type="datetime-local" id="end-date" name="end-date"
+                    <input type="datetime-local" id="rd-end-date-btn" name="end-date"
                            class="form-control"
                            value="{{ route.end_date|date:'Y-m-d\TH:i' }}">
                 </div>
                 
-                <div id="difficulty-rating" class="d-flex">
-                    <span class="boot" data-value="1" title="Easy" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                    <span class="boot" data-value="2" title="Moderate" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                    <span class="boot" data-value="3" title="Challenging" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                    <span class="boot" data-value="4" title="Difficult" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                    <span class="boot" data-value="5" title="Extreme" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                <div class="d-flex align-items-center">
+                    <span class="me-2 text-muted small">Difficulty:</span>
+
+                    <div id="rd-difficulty-rating-btn" class="d-flex">
+                        <span class="boot" data-value="1" title="Easy" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                        <span class="boot" data-value="2" title="Moderate" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                        <span class="boot" data-value="3" title="Challenging" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                        <span class="boot" data-value="4" title="Difficult" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                        <span class="boot" data-value="5" title="Extreme" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                    </div>
                 </div>
 
             </div>

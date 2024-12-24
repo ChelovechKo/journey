@@ -50,22 +50,27 @@
                         
                             <!-- User Avatar -->
                             <div class="position-absolute bottom-0 end-0 m-2">
-                                {% if route.creator_avatar %}
-                                    <!-- User's avatar -->
-                                    <img src="{{ route.creator_avatar }}" 
-                                         alt="{{ route.creator_username }}" 
-                                         class="rounded-circle" 
-                                         style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;" 
-                                         data-bs-toggle="tooltip" 
-                                         data-bs-placement="top" 
-                                         title="{{ route.creator_username }}">
+                                {% if route.user.avatar %}
+                                    <!-- Users's avatar -->
+                                    <img src="{{ route.user.avatar.url }}"
+                                         alt="{{ route.user.name }}"
+                                         class="rounded-circle"
+                                         style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;"
+                                         data-bs-toggle="tooltip"
+                                         data-bs-placement="top"
+                                         title="{{ route.user.username }}">
+                                {% elif user.selected_icon %}
+                                    <i class="{{ route.user.selected_icon }} fa-2x"
+                                       style="color: {{ route.user.selected_color }}; margin-right: 10px;"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="{{ route.user.username }}"></i>
                                 {% else %}
-                                    <!-- Default user icon -->
-                                    <i class="fa fa-user-circle fa-2x text-secondary" 
-                                       style="cursor: pointer;" 
-                                       data-bs-toggle="tooltip" 
-                                       data-bs-placement="top" 
-                                       title="{{ route.creator_username }}"></i>
+                                    <i class="fa fa-user-circle fa-2x text-secondary"
+                                       style="margin-right: 10px;"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="{{ route.user.username }}"></i>
                                 {% endif %}
                             </div>
 

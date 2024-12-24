@@ -228,6 +228,7 @@ function myPlaces(){
             pointCard.dispatchEvent(clickEvent);
         }
     }
+
     // Click on the Point Card to edit info
     function handlePointClick(e) {
         const clickedElement = e.target;
@@ -987,8 +988,54 @@ function routeDetailsPage(){
     let selectedRating = 0;
     let selectedDifficulty = 0;
     const applyRouteChangesButton = document.getElementById('save-route-btn');
-    const isOwner = routeInfo.getAttribute('data-is-owner') === 'true';
-    const routeId = routeInfo.getAttribute('data-route-id');
+    const routeInfo = document.getElementById('routeJSinfo');
+    const isOwner = routeInfo.getAttribute('route-details-is-owner') === 'true';
+    const routeId = routeInfo.getAttribute('route-details-route-id');
+    const rdNameDisplay = document.getElementById('rd-name-display');
+    const rdNameInput = document.getElementById('rd-name-input');
+
+    const rdStatusToogleButton = document.getElementById('rd-status-toggle-btn');
+    const rdCompletionToogleButton = document.getElementById('rd-completion-toggle-btn');
+    const rdNameEditButton = document.getElementById('rd-name-edit-btn');
+
+    function click_rdNameEditButton(){
+        // Edit
+        if (rdNameEditButton.textContent.trim() === '✏️') {
+            rdNameDisplay.classList.add('d-none');
+            rdNameInput.classList.remove('d-none');
+            rdNameEditButton.textContent = '✅';
+            rdNameEditButton.setAttribute('title', 'Save route name');
+        }
+        // Save
+        else if (rdNameEditButton.textContent.trim() === '✅') {
+            const newName = rdNameInput.value.trim();
+
+            if (newName) {
+                rdNameDisplay.textContent = newName;
+            }
+
+            rdNameDisplay.classList.remove('d-none');
+            rdNameInput.classList.add('d-none');
+            rdNameEditButton.textContent = '✏️';
+            rdNameEditButton.setAttribute('title', 'Edit route name');
+        }
+    }
+
+    function click_rdStatusToogleButton(){
+        const tooltipInstance = bootstrap.Tooltip.getInstance(rdStatusToogleButton);
+        if (tooltipInstance) {
+            tooltipInstance.hide();
+        }
+        const currentStatus = rdStatusToogleButton.textContent.trim();
+        const newStatus = currentStatus === 'Published' ? 'Saved' : 'Published';
+        rdStatusToogleButton.textContent = newStatus;
+        rdStatusToogleButton.setAttribute('title', newStatus === 'Published' ? 'bg-primary' : 'bg-success');
+    }
+
+    function click_rdCompletionToogleButton(){
+        const currentIcon = rdCompletionToogleButton.textContent.trim();
+        rdCompletionToogleButton.textContent = currentIcon === '🎯' ? '⏳' : '🎯';
+    }
 
     function applyRouteChangesButtonClick(e){
         e.preventDefault();
@@ -1035,7 +1082,7 @@ function routeDetailsPage(){
     }
 
     function rateStars(){
-        const stars = document.querySelectorAll('#star-rating .star');
+        const stars = document.querySelectorAll('#rd-star-rating-btn .star');
 
         stars.forEach((star, index) => {
             star.addEventListener('mouseover', () => {
@@ -1061,32 +1108,32 @@ function routeDetailsPage(){
     }
 
     function bootDifficulty(){
-        const boots = document.querySelectorAll('#difficulty-rating .boot');
+        const boots = document.querySelectorAll('#rd-difficulty-rating-btn .boot');
 
         boots.forEach((boot, index) => {
-        boot.addEventListener('mouseover', () => {
-            boots.forEach((b, i) => {
-                b.style.color = i <= index ? '#f0ad4e' : '#ddd';
-                b.style.filter = i <= index ? 'brightness(100%)' : 'brightness(70%)';
+            boot.addEventListener('mouseover', () => {
+                boots.forEach((b, i) => {
+                    b.style.color = i <= index ? '#f0ad4e' : '#ddd';
+                    b.style.filter = i <= index ? 'brightness(100%)' : 'brightness(70%)';
+                });
             });
-        });
 
-        boot.addEventListener('mouseout', () => {
-            boots.forEach((b, i) => {
-                b.style.color = i < selectedDifficulty ? '#ffc107' : '#ddd';
-                b.style.filter = i < selectedDifficulty ? 'brightness(100%)' : 'brightness(70%)';
+            boot.addEventListener('mouseout', () => {
+                boots.forEach((b, i) => {
+                    b.style.color = i < selectedDifficulty ? '#ffc107' : '#ddd';
+                    b.style.filter = i < selectedDifficulty ? 'brightness(100%)' : 'brightness(70%)';
+                });
             });
-        });
 
-        boot.addEventListener('click', () => {
-            selectedDifficulty = index + 1;
-            boots.forEach((b, i) => {
-                b.style.color = i < selectedDifficulty ? '#ffc107' : '#ddd';
-                b.style.filter = i < selectedDifficulty ? 'brightness(100%)' : 'brightness(70%)';
+            boot.addEventListener('click', () => {
+                selectedDifficulty = index + 1;
+                boots.forEach((b, i) => {
+                    b.style.color = i < selectedDifficulty ? '#ffc107' : '#ddd';
+                    b.style.filter = i < selectedDifficulty ? 'brightness(100%)' : 'brightness(70%)';
+                });
+                console.log(`Selected Difficulty: ${selectedDifficulty}`);
             });
-            console.log(`Selected Difficulty: ${selectedDifficulty}`);
         });
-    });
     }
 
     rateStars();
@@ -1094,6 +1141,9 @@ function routeDetailsPage(){
 
     // Apply changes
     if (isOwner) {
+        rdNameEditButton.addEventListener('click', click_rdNameEditButton);
+        rdStatusToogleButton.addEventListener('click', click_rdStatusToogleButton);
+        rdCompletionToogleButton.addEventListener('click', click_rdCompletionToogleButton);
         applyRouteChangesButton.addEventListener('click', applyRouteChangesButtonClick);
     }
 }

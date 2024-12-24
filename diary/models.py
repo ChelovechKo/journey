@@ -3,6 +3,7 @@ from email.policy import default
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import Max
+from django.utils.timezone import now
 
 
 class User(AbstractUser):
@@ -48,7 +49,7 @@ class Route(models.Model):
 
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="routes")
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=now, null=False, blank=False)
 
     name = models.CharField(max_length=255)
     start_date = models.DateTimeField(null=True, blank=True)
@@ -64,6 +65,8 @@ class Route(models.Model):
     isPlan = models.BooleanField(default=True)  # True - is in Plan, False - is Finished
     isDraft = models.BooleanField(default=False)  # True - is Draft, False - is Done
     isPublished = models.BooleanField(default=False)  # True - is Published, False - is not
+
+    waypoints = models.JSONField(default=list) # Saved route direction
 
     def __str__(self):
         return f"{self.id}-{self.name}"

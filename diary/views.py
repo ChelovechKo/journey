@@ -43,6 +43,7 @@ def format_duration(duration):
         result.append(f"{minutes} minutes")
     return ', '.join(result)
 
+
 def index(request):
     return render(request, "diary/index.html")
 
@@ -116,6 +117,7 @@ def upload_avatar(request):
         return JsonResponse({'status': 'success', 'file_path': f'/media/{file_path}'})
     return JsonResponse({'status': 'error', 'message': 'No file uploaded'}, status=400)
 
+
 @login_required
 def profile(request):
     user = request.user
@@ -168,6 +170,7 @@ def profile(request):
 
     return render(request, "diary/profile.html", {"user": user})
 
+
 @login_required
 def my_places(request):
     # If exist -> created = True, if not -> created = False
@@ -196,6 +199,7 @@ def my_places(request):
         "categories_data": json.dumps(categories_data)
     })
 
+
 def reverse_geocode(request):
     lat = request.GET.get('lat')
     lon = request.GET.get('lon')
@@ -215,6 +219,7 @@ def reverse_geocode(request):
         return JsonResponse(response.json())
     except requests.RequestException as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 @login_required
 def delete_point_from_route(request, point_id):
@@ -248,6 +253,7 @@ def delete_point_from_route(request, point_id):
             return JsonResponse({'success': False, 'error': 'Point does not exist'})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
 
 @login_required
 def add_point_to_route(request):
@@ -292,6 +298,7 @@ def add_point_to_route(request):
         return JsonResponse({'success': True, 'place_info': place_info, 'route_info': model_to_dict(route)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
+
 @login_required
 def get_point(request, point_id):
     try:
@@ -335,6 +342,7 @@ def update_point(request, point_id):
             return JsonResponse({'success': False, 'error': 'Place not found'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
+
 @login_required
 def update_point_order(request):
     if request.method == 'POST':
@@ -362,6 +370,7 @@ def update_point_order(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
 
 @login_required
 def save_route(request):
@@ -400,17 +409,18 @@ def route_detail(request, route_id):
     tmp_route['form_distance'] = format_distance(route.distance)
     tmp_route['form_duration'] = format_duration(route.duration)
     tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
-    tmp_route['creator_username'] = route.user.username or "Unknown User"
-    tmp_route['creator_avatar'] = route.user.avatar.url if hasattr(route.user, 'avatar') and route.user.avatar else None
 
     places = Place.objects.filter(route=route).order_by('order')
 
     is_owner = request.user.is_authenticated and route.user == request.user
 
+    user = model_to_dict(User.objects.get(id=route.user.id))
+
     return render(request, "diary/route_detail.html", {
         "route": tmp_route,
         "places": places,
         'is_owner': is_owner,
+        "user": user,
     })
 
 
@@ -430,14 +440,14 @@ def routes_view(request, view_type):
         tmp_route['form_distance'] = format_distance(route.distance)
         tmp_route['form_duration'] = format_duration(route.duration)
         tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
-        tmp_route['creator_username'] = route.user.username or "Unknown User"
-        tmp_route['creator_avatar'] = route.user.avatar.url if hasattr(route.user, 'avatar') and route.user.avatar else None
+        tmp_route['user'] = model_to_dict(User.objects.get(id=route.user.id))
         processed_routes.append(tmp_route)
 
     return render(request, 'diary/routes.html', {
         'routes': processed_routes,
         'title': title,
     })
+
 
 @login_required
 def apply_route_changes(request):
