@@ -1,0 +1,92 @@
+{% extends "diary/layout.html" %}
+{% block body %}
+    <div class="mx-4 my-3">
+        <div class="container-lg mt-3">
+            <h2>{{ title }}</h2>
+            <hr>
+
+            <div class="row">
+                {% for route in routes %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card route-card shadow-sm position-relative fixed-height-card" onclick="window.location.href='/route/{{ route.id }}/';">
+                            <!-- Route's badge -->
+                            <span class="badge position-absolute top-0 end-0 m-2
+                                {% if route.isDraft %} bg-secondary {% elif route.isPublished %} bg-primary {% endif %}">
+                                {% if route.isDraft %}Draft{% elif route.isPublished %}Published{% endif %}
+                            </span>
+                            <div class="card-body">
+                                <!-- Route's Title -->
+                                <h5 class="card-title d-flex align-items-center">
+                                    <span class="small"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="{% if route.isVisited %}Visited{% else %}Planned{% endif %}">
+                                        {% if route.isVisited %}🎯{% else %}⏳{% endif %}
+                                    </span>
+                                    {{ route.name }}
+                                </h5>
+                            
+                                <!-- Route's details -->
+                                <div class="d-flex align-items-center gap-2">
+                                    <!-- Distance -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
+                                        <span class="text-muted small">{{ route.form_distance }}</span>
+                                    </div>
+        
+                                    <!-- Duration -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration">🕒</span>
+                                        <span class="text-muted small">{{ route.form_duration }}</span>
+                                    </div>
+        
+                                    <!-- Price -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
+                                        <span class="text-muted small">{{ route.price }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <!-- User Avatar -->
+                            <div class="position-absolute bottom-0 end-0 m-2">
+                                {% if route.creator_avatar %}
+                                    <!-- User's avatar -->
+                                    <img src="{{ route.creator_avatar }}" 
+                                         alt="{{ route.creator_username }}" 
+                                         class="rounded-circle" 
+                                         style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;" 
+                                         data-bs-toggle="tooltip" 
+                                         data-bs-placement="top" 
+                                         title="{{ route.creator_username }}">
+                                {% else %}
+                                    <!-- Default user icon -->
+                                    <i class="fa fa-user-circle fa-2x text-secondary" 
+                                       style="cursor: pointer;" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top" 
+                                       title="{{ route.creator_username }}"></i>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <p class="text-center text-muted">
+                            {% if user.is_authenticated %}
+                                {% if title == 'All Routes' %}
+                                    No published routes found. <a href="{% url 'my_routes' %}" class="text-primary">Publish your route!</a>
+                                {% elif context == 'My Routes' %}
+                                    No routes found. <a href="{% url 'my-places' %}" class="text-primary">Start creating your first route!</a>
+                                {% endif %}
+                            {% else %}
+                                You are not logged in. <a href="{% url 'register' %}" class="text-primary">Register here</a> to start creating routes!
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

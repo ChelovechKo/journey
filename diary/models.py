@@ -1,3 +1,5 @@
+from email.policy import default
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import Max
@@ -55,7 +57,7 @@ class Route(models.Model):
     rating = models.PositiveSmallIntegerField(null=True, blank=True)  # from 1 to 5
     distance = models.FloatField(null=True, blank=True)  # in meters
     duration = models.PositiveIntegerField(null=True, blank=True)  # in minutes
-    price = models.FloatField(null=True, blank=True)  # ??? convert ???
+    price = models.FloatField(null=True, blank=True, default = 0)  # ??? convert ???
     difficulty = models.PositiveSmallIntegerField(null=True, blank=True)  # from 1 to 5
     description = models.TextField(blank=True)
     #elevation_gain = models.FloatField(null=True, blank=True)  # in meters

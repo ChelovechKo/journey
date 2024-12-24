@@ -1,33 +1,36 @@
 {% extends "diary/layout.html" %}
 
 {% block body %}
-    <div class="body mx-4 my-3">
-        <!-- Заголовок с именем маршрута -->
-        <h1 id="page-header">{{ route.name }} DETAILS</h1>
-
-        <!-- Информация о маршруте -->
-        <div class="mb-3">
-            <p><strong>Distance:</strong> {{ route.distance }} km</p>
-            <p><strong>Duration:</strong> {{ route.duration }}</p>
-            <p><strong>Start Date:</strong> {{ route.start_date }}</p>
-            <p><strong>End Date:</strong> {{ route.end_date }}</p>
-            <p><strong>Price:</strong> {{ route.price }}</p>
-        </div>
-
-        <!-- Список точек маршрута -->
-        <div class="mb-3">
-            <h3>Points</h3>
-            <ul class="list-group">
-                {% for place in places %}
-                    <li class="list-group-item">
-                        <strong>{{ place.order }}. {{ place.name }}</strong>
-                        <br>
-                        {{ place.city }}, {{ place.country }}
-                        <br>
-                        <small>{{ place.address }}</small>
-                    </li>
-                {% endfor %}
-            </ul>
+    <div class="mx-4 my-3">
+        <div class="container-lg mt-3">
+            <!-- Title -->
+            <h2 id="page-header">Route: {{ route.name }}</h2>
+            <hr>
+    
+            <!-- Route's Info -->
+            <div class="mb-3">
+                <p><strong>Distance:</strong> {{ route.distance }} km</p>
+                <p><strong>Duration:</strong> {{ route.duration }}</p>
+                <p><strong>Start Date:</strong> {{ route.start_date }}</p>
+                <p><strong>End Date:</strong> {{ route.end_date }}</p>
+                <p><strong>Price:</strong> {{ route.price }}</p>
+            </div>
+    
+            <!-- Route's point -->
+            <div class="mb-3">
+                <h3>Points</h3>
+                <ul class="list-group">
+                    {% for place in places %}
+                        <li class="list-group-item">
+                            <strong>{{ place.order }}. {{ place.name }}</strong>
+                            <br>
+                            {{ place.city }}, {{ place.country }}
+                            <br>
+                            <small>{{ place.address }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
 {% endblock %}

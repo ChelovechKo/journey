@@ -16,6 +16,32 @@ import requests
 
 from .models import User, Place, MarkerSubCategory, MarkerCategory, Route
 
+def format_distance(distance):
+    if not distance:
+        return '?'
+
+    km = int(distance // 1000)
+    meters = round(distance % 1000)
+
+    if km > 0:
+        return f"{km} km {meters} m" if meters > 0 else f"{km} km"
+    return f"{meters} m"
+
+
+def format_duration(duration):
+    if not duration:
+        return '?'
+    days = duration // 1440
+    hours = (duration % 1440) // 60
+    minutes = duration % 60
+    result = []
+    if days > 0:
+        result.append(f"{days} days")
+    if hours > 0:
+        result.append(f"{hours} hours")
+    if minutes > 0:
+        result.append(f"{minutes} minutes")
+    return ', '.join(result)
 
 def index(request):
     return render(request, "diary/index.html")
@@ -144,15 +170,19 @@ def profile(request):
 
 @login_required
 def my_places(request):
-    # get user's draft, if exit
-    route = Route.objects.filter(user=request.user, isDraft=True).first()
+    # If exist -> created = True, if not -> created = False
+    route, created = Route.objects.get_or_create(
+        user=request.user,
+        isDraft=True,
+        defaults={'name': 'New Route', 'created_at': timezone.now()}
+    )
     places = []
-    if route:
-        # get route's places
-        for place in Place.objects.filter(route=route).order_by('order'):
-            place_data = model_to_dict(place)
-            place_data["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
-            places.append(place_data)
+
+    # get route's places
+    for place in Place.objects.filter(route=route).order_by('order'):
+        place_data = model_to_dict(place)
+        place_data["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
+        places.append(place_data)
 
     categories = MarkerCategory.objects.all()
     subCategories = MarkerSubCategory.objects.all()
@@ -337,11 +367,10 @@ def update_point_order(request):
 def save_route(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            route_id = data.get('routeId')
-            distance = data.get('distance')
-            duration = data.get('duration')
-            price = data.get('price')
+            route_id = request.POST.get('routeId')
+            distance = request.POST.get('distance')
+            duration = request.POST.get('duration')
+            price = request.POST.get('price')
 
             route = Route.objects.get(id=route_id)
             points = Place.objects.filter(route=route).order_by('order')
@@ -366,9 +395,49 @@ def save_route(request):
 
 
 def route_detail(request, route_id):
-    route = get_object_or_404(Route, id=route_id, user=request.user)
+    route = get_object_or_404(Route, id=route_id)
     places = Place.objects.filter(route=route).order_by('order')
     return render(request, "diary/route_detail.html", {
         "route": route,
         "places": places,
+    })
+
+
+@login_required
+def my_routes(request):
+    # get all user's routes
+    routes = Route.objects.filter(user=request.user).order_by('-created_at')
+
+    processed_routes = []
+    for route in routes:
+        tmp_route = model_to_dict(route)
+        tmp_route['form_distance'] = format_distance(route.distance)
+        tmp_route['form_duration'] = format_duration(route.duration)
+        tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
+        tmp_route['creator_username'] = route.user.username or "Unknown User"
+        tmp_route['creator_avatar'] = route.user.avatar.url if hasattr(route.user, 'avatar') and route.user.avatar else None
+        processed_routes.append(tmp_route)
+
+    return render(request, 'diary/routes.html', {
+        'routes': processed_routes,
+        'title': 'My Routes',
+    })
+
+def all_routes(request):
+    # get all published
+    routes = Route.objects.filter(isPublished=True).order_by('-created_at')
+
+    processed_routes = []
+    for route in routes:
+        tmp_route = model_to_dict(route)
+        tmp_route['form_distance'] = format_distance(route.distance)
+        tmp_route['form_duration'] = format_duration(route.duration)
+        tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
+        tmp_route['creator_username'] = route.user.username or "Unknown User"
+        tmp_route['creator_avatar'] = route.user.avatar.url if hasattr(route.user, 'avatar') and route.user.avatar else None
+        processed_routes.append(tmp_route)
+
+    return render(request, 'diary/routes.html', {
+        'routes': processed_routes,
+        'title': 'All Routes',
     })

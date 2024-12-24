@@ -36,28 +36,14 @@ function myPlaces(){
         const duration = document.getElementById("route-duration-save").value;
         const price = document.getElementById("route-price-save").value;
 
-        const data = {
-            routeId: routeId,
-            distance: distance,
-            duration: duration,
-            price: price
-        };
+        // Fill form
+        document.getElementById("route-form-id-input").value = routeId;
+        document.getElementById("route-form-distance-input").value = distance;
+        document.getElementById("route-form-duration-input").value = duration;
+        document.getElementById("route-form-price-input").value = price;
 
-        fetch("/save_route/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCSRFToken(),
-            },
-            body: JSON.stringify(data),
-        }).then(response => {
-            if (response.ok) {
-                console.log("Route saved successfully!");
-            } else {
-                console.error("Error saving route:", response.statusText);
-            }
-        })
-        .catch(error => console.error("Error saving route:", error));
+        // Send form
+        document.getElementById("save-route-form").submit();
     }
 
     // Get Direction
@@ -160,6 +146,7 @@ function myPlaces(){
             document.getElementById('route-price').textContent = `${totalPrice.toFixed(2)}`;
             document.getElementById('route-price-save').value = totalPrice.toFixed(2);
 
+            saveRouteButton.classList.remove("d-none");
         });
     }
 
