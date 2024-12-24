@@ -12,14 +12,42 @@
                 {% if route.isVisited %}🎯{% else %}⏳{% endif %}
             </span>
             {{ route.name }}
-            <!-- Badge on top-right of the title -->
-            <span class="badge position-absolute top-0 end-0
-                         {% if route.isDraft %} bg-secondary
-                         {% elif route.isPublished %} bg-primary
-                         {% else %} bg-success
-                         {% endif %}">
-                {% if route.isDraft %}Draft{% elif route.isPublished %}Published{% else %}Saved{% endif %}
-            </span>
+        
+            <!-- Badge on top-right of the title (Published/Saved) -->
+            <div class="dropdown position-absolute top-0 end-0">
+                <span 
+                    class="badge dropdown-toggle 
+                           {% if route.isPublished %} bg-primary
+                           {% elif not route.isDraft %} bg-success
+                           {% endif %}" 
+                    id="status-dropdown" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false">
+                    {% if route.isPublished %}Published{% elif not route.isDraft %}Saved{% endif %}
+                </span>
+                
+                {% if is_owner %}
+                    <ul class="dropdown-menu" aria-labelledby="status-dropdown">
+                        {% if route.isPublished %}
+                            <li>
+                                <a class="dropdown-item text-white bg-success rounded" 
+                                   href="#" 
+                                   id="save-status-btn">
+                                    Save
+                                </a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a class="dropdown-item text-white bg-primary rounded" 
+                                   href="#" 
+                                   id="publish-status-btn">
+                                    Publish
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
+            </div>
         </h2>
         <hr>
 
@@ -133,6 +161,18 @@
 
             </div>
         </div>
+    
+        {% if is_owner %}
+            <div class="text-end mt-4">
+                <button id="save-route-btn" class="btn btn-primary">Apply changes</button>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- info for JS -->
+    <div id="routeJSinfo"
+         route-details-is-owner="{{ is_owner|lower }}" 
+         route-details-route-id="{{ route.id }}">
     </div>
 </div>
 

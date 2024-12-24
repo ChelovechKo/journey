@@ -986,6 +986,53 @@ function avatarEditing(){
 function routeDetailsPage(){
     let selectedRating = 0;
     let selectedDifficulty = 0;
+    const applyRouteChangesButton = document.getElementById('save-route-btn');
+    const isOwner = routeInfo.getAttribute('data-is-owner') === 'true';
+    const routeId = routeInfo.getAttribute('data-route-id');
+
+    function applyRouteChangesButtonClick(e){
+        e.preventDefault();
+
+        // Собираем данные с текущей страницы
+        const routeId = "{{ route.id }}"; // Убедитесь, что идентификатор маршрута доступен
+        const routeName = document.getElementById('route-name-input').value || "{{ route.name }}";
+        const startDate = document.getElementById('start-date-input').value || "{{ route.start_date }}";
+        const endDate = document.getElementById('end-date-input').value || "{{ route.end_date }}";
+        const distance = "{{ route.distance }}"; // Или значение из формы, если редактируется
+        const duration = "{{ route.duration }}"; // Или значение из формы, если редактируется
+        const price = "{{ route.price }}"; // Или значение из формы, если редактируется
+
+        // Отправляем данные через Fetch
+        fetch('/save_route/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(), // Замените на вашу функцию получения CSRF токена
+            },
+            body: JSON.stringify({
+                routeId: routeId,
+                name: routeName,
+                startDate: startDate,
+                endDate: endDate,
+                distance: distance,
+                duration: duration,
+                price: price,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Route saved successfully!');
+                location.reload(); // Перезагрузка страницы для обновления данных
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving route:', error);
+            alert('An error occurred while saving the route.');
+        });
+    }
 
     function rateStars(){
         const stars = document.querySelectorAll('#star-rating .star');
@@ -1044,6 +1091,11 @@ function routeDetailsPage(){
 
     rateStars();
     bootDifficulty();
+
+    // Apply changes
+    if (isOwner) {
+        applyRouteChangesButton.addEventListener('click', applyRouteChangesButtonClick);
+    }
 }
 
 // main

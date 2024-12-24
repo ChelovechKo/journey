@@ -316,7 +316,7 @@ def get_point(request, point_id):
     except Place.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Place not found'})
 
-@login_required
+
 def update_point(request, point_id):
     if request.method == 'POST':
         try:
@@ -404,9 +404,13 @@ def route_detail(request, route_id):
     tmp_route['creator_avatar'] = route.user.avatar.url if hasattr(route.user, 'avatar') and route.user.avatar else None
 
     places = Place.objects.filter(route=route).order_by('order')
+
+    is_owner = request.user.is_authenticated and route.user == request.user
+
     return render(request, "diary/route_detail.html", {
         "route": tmp_route,
         "places": places,
+        'is_owner': is_owner,
     })
 
 
@@ -434,3 +438,36 @@ def routes_view(request, view_type):
         'routes': processed_routes,
         'title': title,
     })
+
+@login_required
+def apply_route_changes(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            route_id = data.get('routeId')
+            name = data.get('name')
+            start_date = data.get('startDate')
+            end_date = data.get('endDate')
+            distance = data.get('distance')
+            duration = data.get('duration')
+            price = data.get('price')
+
+            route = Route.objects.get(id=route_id)
+
+            if route.user != request.user:
+                return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+            # Обновляем данные маршрута
+            route.name = name
+            route.start_date = start_date
+            route.end_date = end_date
+            route.distance = float(distance) if distance else 0
+            route.duration = float(duration) if duration else 0
+            route.price = float(price) if price else 0
+            route.save()
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)

@@ -21,6 +21,7 @@ urlpatterns = [
     path("save_route/", views.save_route, name="save_route"),
     path('route/<int:route_id>/', views.route_detail, name='route_detail'),
     path('routes/<str:view_type>/', views.routes_view, name='routes_view'),
+    path('apply_route_changes/', views.apply_route_changes, name='apply_route_changes'),
 ]
 
 if settings.DEBUG:

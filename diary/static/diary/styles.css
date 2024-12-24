@@ -415,27 +415,26 @@ html, body {
 
 /* Boot difficulty */
 #difficulty-rating {
-    font-size: 30px; /* Размер ботинок */
-    color: #ddd; /* Цвет "незаполненных" ботинок */
+    font-size: 30px;
+    color: #ddd;
     cursor: pointer;
     display: inline-flex;
 }
 
 #difficulty-rating .boot {
     transition: color 0.2s ease;
-    filter: brightness(70%); /* Создаёт эффект "незаполненного" ботинка */
+    filter: brightness(70%);
 }
 
-/* Подсветка ботинок при наведении */
 #difficulty-rating .boot:hover,
 #difficulty-rating .boot:hover ~ .boot {
-    color: #f0ad4e; /* Цвет "заполненных" ботинок */
-    filter: brightness(100%); /* Делает ботинки ярче при наведении */
-}
-
-/* Выбранные ботинки */
-#difficulty-rating .boot.selected,
-#difficulty-rating .boot.selected ~ .boot {
-    color: #ffc107; /* Жёлтый цвет для выбранных ботинок */
+    color: #f0ad4e;
     filter: brightness(100%);
 }
+
+#difficulty-rating .boot.selected,
+#difficulty-rating .boot.selected ~ .boot {
+    color: #ffc107;
+    filter: brightness(100%);
+}
+
