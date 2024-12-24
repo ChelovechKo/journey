@@ -116,8 +116,6 @@ function myPlaces(){
             }
         }).addTo(map);
 
-        saveRouteButton.classList.remove("d-none");
-
         window.currentRoute.on('routesfound', function (e) {
             const route = e.routes[0];
 
@@ -147,6 +145,8 @@ function myPlaces(){
 
             document.getElementById('route-price').textContent = `${totalPrice.toFixed(2)}`;
             document.getElementById('route-price-save').value = totalPrice.toFixed(2);
+
+            saveRouteButton.style.display = "block";
         });
     }
 
@@ -180,6 +180,8 @@ function myPlaces(){
         }
         document.getElementById('route-distance').textContent = '?';
         document.getElementById('route-duration').textContent = '?';
+
+        saveRouteButton.style.display = "block";
     }
 
     // Delete point on the Route
@@ -890,6 +892,8 @@ function myPlaces(){
             buildRoute();
         });
     }
+
+    saveRouteButton.style.display = "none";
 }
 
 // Changing Avatar's icon. Page Register and Profile
