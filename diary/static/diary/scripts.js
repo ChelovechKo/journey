@@ -116,6 +116,8 @@ function myPlaces(){
             }
         }).addTo(map);
 
+        saveRouteButton.classList.remove("d-none");
+
         window.currentRoute.on('routesfound', function (e) {
             const route = e.routes[0];
 
@@ -145,8 +147,6 @@ function myPlaces(){
 
             document.getElementById('route-price').textContent = `${totalPrice.toFixed(2)}`;
             document.getElementById('route-price-save').value = totalPrice.toFixed(2);
-
-            saveRouteButton.classList.remove("d-none");
         });
     }
 
