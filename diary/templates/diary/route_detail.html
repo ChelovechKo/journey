@@ -1,36 +1,140 @@
 {% extends "diary/layout.html" %}
 
 {% block body %}
-    <div class="mx-4 my-3">
-        <div class="container-lg mt-3">
-            <!-- Title -->
-            <h2 id="page-header">Route: {{ route.name }}</h2>
-            <hr>
-    
-            <!-- Route's Info -->
-            <div class="mb-3">
-                <p><strong>Distance:</strong> {{ route.distance }} km</p>
-                <p><strong>Duration:</strong> {{ route.duration }}</p>
-                <p><strong>Start Date:</strong> {{ route.start_date }}</p>
-                <p><strong>End Date:</strong> {{ route.end_date }}</p>
-                <p><strong>Price:</strong> {{ route.price }}</p>
+<div class="mx-4 my-3">
+    <div class="container-lg mt-3 position-relative">
+        <!-- Title with badge -->
+        <h2 id="page-header" class="d-flex align-items-center position-relative">
+            <span class="small me-2"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="{% if route.isVisited %}Visited{% else %}Planned{% endif %}">
+                {% if route.isVisited %}🎯{% else %}⏳{% endif %}
+            </span>
+            {{ route.name }}
+            <!-- Badge on top-right of the title -->
+            <span class="badge position-absolute top-0 end-0
+                         {% if route.isDraft %} bg-secondary
+                         {% elif route.isPublished %} bg-primary
+                         {% else %} bg-success
+                         {% endif %}">
+                {% if route.isDraft %}Draft{% elif route.isPublished %}Published{% else %}Saved{% endif %}
+            </span>
+        </h2>
+        <hr>
+
+        <div class="row vh-100">
+            <!-- Points Column (10/12) -->
+            <div class="col-md-10">
+
+                <!-- Creator Info -->
+                <div class="mb-4 d-flex align-items-center gap-2">
+                    <span class="fw-bold">Created by:</span>
+                    {% if route.creator_avatar %}
+                        <!-- User's avatar -->
+                        <img src="{{ route.creator_avatar }}"
+                             alt="{{ route.creator_username }}"
+                             class="rounded-circle"
+                             style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;"
+                             data-bs-toggle="tooltip"
+                             data-bs-placement="top"
+                             title="{{ route.creator_username }}">
+                    {% else %}
+                        <!-- Default user icon -->
+                        <i class="fa fa-user-circle fa-2x text-secondary"
+                           style="cursor: pointer;"
+                           data-bs-toggle="tooltip"
+                           data-bs-placement="top"
+                           title="{{ route.creator_username }}"></i>
+                    {% endif %}
+                </div>
+
+                <!-- Route's Points -->
+                <div class="mb-3">
+                    <h3>Points</h3>
+                    <ul class="list-group">
+                        {% for place in places %}
+                            <li class="list-group-item">
+                                <strong>{{ place.order }}. {{ place.name }}</strong>
+                                <br>
+                                {{ place.city }}, {{ place.country }}
+                                <br>
+                                <small>{{ place.address }}</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
-    
-            <!-- Route's point -->
-            <div class="mb-3">
-                <h3>Points</h3>
-                <ul class="list-group">
-                    {% for place in places %}
-                        <li class="list-group-item">
-                            <strong>{{ place.order }}. {{ place.name }}</strong>
-                            <br>
-                            {{ place.city }}, {{ place.country }}
-                            <br>
-                            <small>{{ place.address }}</small>
-                        </li>
-                    {% endfor %}
-                </ul>
+
+            <!-- Info Column (2/12) -->
+            <div class="col-md-2 d-flex flex-column align-items-start gap-2 border-start ps-3">
+
+                <!-- Title -->
+                <h5>Route Overview</h5>
+                <hr class="w-100">
+                
+                <div id="star-rating" class="d-flex">
+                    <span class="star" data-value="1" title="1 Star" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                    <span class="star" data-value="2" title="2 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                    <span class="star" data-value="3" title="3 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                    <span class="star" data-value="4" title="4 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                    <span class="star" data-value="5" title="5 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                </div>
+
+                <!-- Distance -->
+                <div class="d-flex align-items-center gap-1">
+                    <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
+                    <span class="text-muted small">{{ route.form_distance }}</span>
+                </div>
+
+                <!-- Duration -->
+                <div class="d-flex align-items-center gap-1">
+                    <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration">🕒</span>
+                    <span class="text-muted small">{{ route.form_duration }}</span>
+                </div>
+
+                <!-- Price -->
+                <div class="d-flex align-items-center gap-1">
+                    <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
+                    <span class="text-muted small">{{ route.price }}</span>
+                </div>
+
+                <!-- Start Date -->
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar-event text-dark"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="top"
+                       title="Start Date"
+                       style="cursor: pointer;"></i>
+                    <input type="datetime-local" id="start-date" name="start-date"
+                           class="form-control"
+                           value="{{ route.start_date|date:'Y-m-d\TH:i' }}">
+                </div>
+
+                <!-- End Date -->
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar-check text-dark"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="top"
+                       title="End Date"
+                       style="cursor: pointer;"></i>
+                    <input type="datetime-local" id="end-date" name="end-date"
+                           class="form-control"
+                           value="{{ route.end_date|date:'Y-m-d\TH:i' }}">
+                </div>
+                
+                <div id="difficulty-rating" class="d-flex">
+                    <span class="boot" data-value="1" title="Easy" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                    <span class="boot" data-value="2" title="Moderate" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                    <span class="boot" data-value="3" title="Challenging" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                    <span class="boot" data-value="4" title="Difficult" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                    <span class="boot" data-value="5" title="Extreme" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                </div>
+
             </div>
         </div>
     </div>
+</div>
+
+
 {% endblock %}

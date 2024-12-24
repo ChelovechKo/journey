@@ -395,18 +395,30 @@ def save_route(request):
 
 
 def route_detail(request, route_id):
-    route = get_object_or_404(Route, id=route_id)
+    route = Route.objects.get(id=route_id)
+    tmp_route = model_to_dict(route)
+    tmp_route['form_distance'] = format_distance(route.distance)
+    tmp_route['form_duration'] = format_duration(route.duration)
+    tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
+    tmp_route['creator_username'] = route.user.username or "Unknown User"
+    tmp_route['creator_avatar'] = route.user.avatar.url if hasattr(route.user, 'avatar') and route.user.avatar else None
+
     places = Place.objects.filter(route=route).order_by('order')
     return render(request, "diary/route_detail.html", {
-        "route": route,
+        "route": tmp_route,
         "places": places,
     })
 
 
-@login_required
-def my_routes(request):
-    # get all user's routes
-    routes = Route.objects.filter(user=request.user).order_by('-created_at')
+def routes_view(request, view_type):
+    # what typ select
+    title = ''
+    if view_type == 'my_routes' and request.user.is_authenticated:
+        routes = Route.objects.filter(user=request.user).order_by('-created_at')
+        title = 'My Routes'
+    elif view_type == 'all_routes':
+        routes = Route.objects.filter(isPublished=True).order_by('-created_at')
+        title = 'All Routes'
 
     processed_routes = []
     for route in routes:
@@ -420,24 +432,5 @@ def my_routes(request):
 
     return render(request, 'diary/routes.html', {
         'routes': processed_routes,
-        'title': 'My Routes',
-    })
-
-def all_routes(request):
-    # get all published
-    routes = Route.objects.filter(isPublished=True).order_by('-created_at')
-
-    processed_routes = []
-    for route in routes:
-        tmp_route = model_to_dict(route)
-        tmp_route['form_distance'] = format_distance(route.distance)
-        tmp_route['form_duration'] = format_duration(route.duration)
-        tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
-        tmp_route['creator_username'] = route.user.username or "Unknown User"
-        tmp_route['creator_avatar'] = route.user.avatar.url if hasattr(route.user, 'avatar') and route.user.avatar else None
-        processed_routes.append(tmp_route)
-
-    return render(request, 'diary/routes.html', {
-        'routes': processed_routes,
-        'title': 'All Routes',
+        'title': title,
     })

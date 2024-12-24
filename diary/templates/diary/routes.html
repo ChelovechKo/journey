@@ -11,8 +11,8 @@
                         <div class="card route-card shadow-sm position-relative fixed-height-card" onclick="window.location.href='/route/{{ route.id }}/';">
                             <!-- Route's badge -->
                             <span class="badge position-absolute top-0 end-0 m-2
-                                {% if route.isDraft %} bg-secondary {% elif route.isPublished %} bg-primary {% endif %}">
-                                {% if route.isDraft %}Draft{% elif route.isPublished %}Published{% endif %}
+                                {% if route.isDraft %} bg-secondary {% elif route.isPublished %} bg-primary {% else %} bg-success{% endif %}">
+                                {% if route.isDraft %}Draft{% elif route.isPublished %}Published{% else %}Saved{% endif %}
                             </span>
                             <div class="card-body">
                                 <!-- Route's Title -->
@@ -76,7 +76,7 @@
                         <p class="text-center text-muted">
                             {% if user.is_authenticated %}
                                 {% if title == 'All Routes' %}
-                                    No published routes found. <a href="{% url 'my_routes' %}" class="text-primary">Publish your route!</a>
+                                    No published routes found. <a href="{% url 'routes_view' 'my_routes' %}" class="text-primary">Publish your route!</a>
                                 {% elif context == 'My Routes' %}
                                     No routes found. <a href="{% url 'my-places' %}" class="text-primary">Start creating your first route!</a>
                                 {% endif %}

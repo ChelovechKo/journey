@@ -982,6 +982,70 @@ function avatarEditing(){
     }
 }
 
+//Route Details Page
+function routeDetailsPage(){
+    let selectedRating = 0;
+    let selectedDifficulty = 0;
+
+    function rateStars(){
+        const stars = document.querySelectorAll('#star-rating .star');
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => {
+                stars.forEach((s, i) => {
+                    s.style.color = i <= index ? '#f0ad4e' : '#ddd';
+                });
+            });
+
+            star.addEventListener('mouseout', () => {
+                stars.forEach((s, i) => {
+                    s.style.color = i < selectedRating ? '#ffc107' : '#ddd';
+                });
+            });
+
+            star.addEventListener('click', () => {
+                selectedRating = index + 1;
+                stars.forEach((s, i) => {
+                    s.style.color = i < selectedRating ? '#ffc107' : '#ddd';
+                });
+                console.log(`Selected rating: ${selectedRating}`);
+            });
+        });
+    }
+
+    function bootDifficulty(){
+        const boots = document.querySelectorAll('#difficulty-rating .boot');
+
+        boots.forEach((boot, index) => {
+        boot.addEventListener('mouseover', () => {
+            boots.forEach((b, i) => {
+                b.style.color = i <= index ? '#f0ad4e' : '#ddd';
+                b.style.filter = i <= index ? 'brightness(100%)' : 'brightness(70%)';
+            });
+        });
+
+        boot.addEventListener('mouseout', () => {
+            boots.forEach((b, i) => {
+                b.style.color = i < selectedDifficulty ? '#ffc107' : '#ddd';
+                b.style.filter = i < selectedDifficulty ? 'brightness(100%)' : 'brightness(70%)';
+            });
+        });
+
+        boot.addEventListener('click', () => {
+            selectedDifficulty = index + 1;
+            boots.forEach((b, i) => {
+                b.style.color = i < selectedDifficulty ? '#ffc107' : '#ddd';
+                b.style.filter = i < selectedDifficulty ? 'brightness(100%)' : 'brightness(70%)';
+            });
+            console.log(`Selected Difficulty: ${selectedDifficulty}`);
+        });
+    });
+    }
+
+    rateStars();
+    bootDifficulty();
+}
+
 // main
 document.addEventListener('DOMContentLoaded', function() {
     const currentUrl = window.location.href; // current page url
@@ -998,5 +1062,7 @@ document.addEventListener('DOMContentLoaded', function() {
         avatarEditing();
     } else if(currentUrl.includes('my-places')) {
         myPlaces();
+    } else if(currentUrl.includes('/route/')){
+        routeDetailsPage();
     }
 });
