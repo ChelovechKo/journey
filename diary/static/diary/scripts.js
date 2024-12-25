@@ -62,14 +62,40 @@ function myPlaces(){
         const duration = document.getElementById("route-duration-save").value;
         const price = document.getElementById("route-price-save").value;
 
-        // Fill form
-        document.getElementById("route-form-id-input").value = routeId;
-        document.getElementById("route-form-distance-input").value = distance;
-        document.getElementById("route-form-duration-input").value = duration;
-        document.getElementById("route-form-price-input").value = price;
+        // Save waypoints
+        const waypoints = window.currentRoute.getWaypoints().map((waypoint, i) => ({
+            lat: waypoint.latLng.lat,
+            lng: waypoint.latLng.lng,
+            pointId: waypoint.options.pointId || null,
+            isVisited: waypoint.options.isVisited || false,
+            order: i + 1
+        }));
 
         // Send form
-        document.getElementById("save-route-form").submit();
+        fetch('/save_route/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                routeId: routeId,
+                distance: distance,
+                duration: duration,
+                price: price,
+                waypoints: waypoints
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Route saved successfully!');
+                window.location.href = `/route/${routeId}/`; // Redirect to created route
+            } else {
+                alert('Error saving route: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
     }
 
     // Get Direction

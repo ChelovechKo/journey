@@ -80,6 +80,12 @@
                     {% endif %}
                 </div>
 
+                <!-- Map Container -->
+                <div class="mb-4">
+                    <h3>Route Map</h3>
+                    <div id="map-container" style="height: 500px; border: 1px solid #ddd;"></div>
+                </div>
+            
                 <!-- Route's Points -->
                 <div class="mb-3">
                     <h3>Points</h3>
@@ -230,6 +236,64 @@
          rd-rating="{{ route.rating }}"
          rd-difficulty="{{ route.difficulty }}">
     </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const waypoints = {{ route.waypoints|safe }}; // Получаем waypoints из базы данных
+
+        if (!waypoints || waypoints.length === 0) {
+            alert('No waypoints available for this route.');
+            return;
+        }
+
+        // Инициализация карты
+        const map = L.map('map-container').setView([waypoints[0].lat, waypoints[0].lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(map);
+
+        // Отображение маршрута
+        const routeLine = L.polyline(
+            waypoints.map(point => [point.lat, point.lng]),
+            { color: 'blue', weight: 4 }
+        ).addTo(map);
+
+        // Установка границ карты по маршруту
+        map.fitBounds(routeLine.getBounds());
+
+        // Добавление маркеров с информацией
+        waypoints.forEach((point, index) => {
+            const markerIcon = L.divIcon({
+                className: point.isVisited ? 'visited-marker' : 'unvisited-marker',
+                html: `<div class="marker-icon">#${index + 1}</div>`,
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            });
+
+            const marker = L.marker([point.lat, point.lng], { icon: markerIcon });
+            marker.bindTooltip(`Point #${index + 1}${point.isVisited ? ' (Visited)' : ''}`).openTooltip();
+            marker.addTo(map);
+        });
+    });
+</script>
+
+<style>
+    .visited-marker .marker-icon {
+        background-color: green;
+        color: white;
+        border-radius: 50%;
+        padding: 5px;
+        text-align: center;
+    }
+
+    .unvisited-marker .marker-icon {
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        padding: 5px;
+        text-align: center;
+    }
+</style>
 </div>
 
 

@@ -376,10 +376,12 @@ def update_point_order(request):
 def save_route(request):
     if request.method == 'POST':
         try:
-            route_id = request.POST.get('routeId')
-            distance = request.POST.get('distance')
-            duration = request.POST.get('duration')
-            price = request.POST.get('price')
+            data = json.loads(request.body)
+            route_id = data.get('routeId')
+            distance = data.get('distance')
+            duration = data.get('duration')
+            price = data.get('price')
+            waypoints = data.get('waypoints', [])
 
             route = Route.objects.get(id=route_id)
             points = Place.objects.filter(route=route).order_by('order')
@@ -394,13 +396,15 @@ def save_route(request):
             route.duration = float(duration) if duration else 0
             route.price = float(price) if price else 0
             route.isDraft = False
+            route.waypoints = waypoints
             route.save()
 
-            return redirect('route_detail', route_id=route.id)
+            return JsonResponse({'success': True, 'message': 'Route saved successfully!'})
+        except Route.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Route not found.'})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
 
 def route_detail(request, route_id):

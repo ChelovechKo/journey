@@ -232,14 +232,6 @@
         </div>
      </div>
 
-    <form id="save-route-form" method="post" action="/save_route/">
-        <input type="hidden" name="routeId" id="route-form-id-input">
-        <input type="hidden" name="distance" id="route-form-distance-input">
-        <input type="hidden" name="duration" id="route-form-duration-input">
-        <input type="hidden" name="price" id="route-form-price-input">
-        {% csrf_token %}
-    </form>
-
     <script type="application/json" id="categories-data"> {{ categories_data|safe }} </script>
 </div>
 
