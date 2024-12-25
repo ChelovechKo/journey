@@ -386,8 +386,8 @@ html, body {
 
 /* Star Rating */
 #rd-star-rating-btn {
-    font-size: 30px; /* size */
-    color: #ddd; /* default color */
+    font-size: 30px;
+    color: #ddd;
     cursor: pointer;
     display: inline-flex;
 }
@@ -396,21 +396,14 @@ html, body {
     transition: color 0.2s ease;
 }
 
-/* hover */
-#rd-star-rating-btn .star:hover,
-#rd-star-rating-btn .star:hover ~ .star {
-    color: #ddd; /* reset  */
+.no-interaction #rd-star-rating-btn .star:hover ~ .star,
+.no-interaction #rd-star-rating-btn .star.selected ~ .star {
+    color: #ffc107;
 }
 
-#rd-star-rating-btn .star:hover ~ .star,
-#rd-star-rating-btn .star.selected ~ .star {
-    color: #f0ad4e; /* selected highlight */
-}
-
-/* chosen stars */
 #rd-star-rating-btn .star.selected,
 #rd-star-rating-btn .star.selected ~ .star {
-    color: #ffc107; /* selected color */
+    color: #ffc107;
 }
 
 /* Boot difficulty */
@@ -426,9 +419,9 @@ html, body {
     filter: brightness(70%);
 }
 
-#rd-difficulty-rating-btn .boot:hover,
-#rd-difficulty-rating-btn .boot:hover ~ .boot {
-    color: #f0ad4e;
+.no-interaction #rd-difficulty-rating-btn .boot:hover ~ .star,
+.no-interaction #rd-difficulty-rating-btn .boot.selected ~ .star {
+    color: #ffc107;
     filter: brightness(100%);
 }
 
@@ -438,6 +431,7 @@ html, body {
     filter: brightness(100%);
 }
 
+/* isPlan */
 #rd-completion-toggle-btn {
     cursor: pointer;
     transition: transform 0.2s ease;
@@ -463,4 +457,41 @@ html, body {
 
 #rd-name-edit-btn:hover {
     transform: scale(1.2);
+}
+
+#rd-apply-route-changes-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#rd-apply-route-changes-btn:hover {
+    transform: scale(1.1);
+}
+
+#rd-description-edit-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#rd-description-edit-btn:hover {
+    transform: scale(1.2);
+}
+
+#rd-description-container {
+    background-color: #f8f9fa;
+}
+
+#rd-description {
+    resize: none;
+    cursor: not-allowed;
+}
+
+#rd-description[contenteditable="true"] {
+    cursor: text;
+    background-color: #ffffff;
+}
+
+#rd-message {
+    transition: opacity 0.5s ease-in-out;
+    opacity: 1;
 }

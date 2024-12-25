@@ -1,9 +1,5 @@
 let editingPlaceId = null;
-
-function getCSRFToken() {
-    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    return csrfToken ? csrfToken.value : '';
-}
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 // Add and Edit Point on the User's Map
 function myPlaces(){
@@ -192,7 +188,7 @@ function myPlaces(){
         fetch(`/delete_point_from_route/${pointId}/`, {
             method: 'DELETE',
             headers: {
-                'X-CSRFToken': getCSRFToken(),
+                'X-CSRFToken': csrfToken,
                 'Content-Type': 'application/json'
             },
         })
@@ -293,7 +289,7 @@ function myPlaces(){
             fetch(`/update_point/${editingPlaceId}/`, {
                         method: 'POST',
                         body: formData,
-                        headers: { 'X-CSRFToken': getCSRFToken() }
+                        headers: { 'X-CSRFToken': csrfToken }
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -842,7 +838,7 @@ function myPlaces(){
                 fetch('/update_point_order/', {
                     method: 'POST',
                     headers: {
-                        'X-CSRFToken': getCSRFToken(),
+                        'X-CSRFToken': csrfToken,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ order: pointOrder })
@@ -987,16 +983,105 @@ function avatarEditing(){
 function routeDetailsPage(){
     let selectedRating = 0;
     let selectedDifficulty = 0;
-    const applyRouteChangesButton = document.getElementById('save-route-btn');
+
     const routeInfo = document.getElementById('routeJSinfo');
-    const isOwner = routeInfo.getAttribute('route-details-is-owner') === 'true';
-    const routeId = routeInfo.getAttribute('route-details-route-id');
+    const isOwner = routeInfo.getAttribute('rd-is-owner') === 'true';
+    const routeId = routeInfo.getAttribute('rd-route-id');
+    const rdRating = parseInt(routeInfo.getAttribute('rd-rating')) || 0;
+    const rdDifficulty = parseInt(routeInfo.getAttribute('rd-difficulty')) || 0;
+
+    const rdMessage = document.getElementById('rd-message');
     const rdNameDisplay = document.getElementById('rd-name-display');
     const rdNameInput = document.getElementById('rd-name-input');
-
     const rdStatusToogleButton = document.getElementById('rd-status-toggle-btn');
     const rdCompletionToogleButton = document.getElementById('rd-completion-toggle-btn');
     const rdNameEditButton = document.getElementById('rd-name-edit-btn');
+    const rdStartDateButton = document.getElementById('rd-start-date-btn');
+    const rdEndDateButton = document.getElementById('rd-end-date-btn');
+    const rdDescriptionEditButton = document.getElementById('rd-description-edit-btn');
+    const rdDescriptionTextarea = document.getElementById('rd-description');
+    const rdApplyRouteChangesButton = document.getElementById('rd-apply-route-changes-btn');
+    const rdStarsRatingButton = document.getElementById('rd-star-rating-btn');
+    const rdBootsDifficultyButton = document.getElementById('rd-difficulty-rating-btn');
+
+    const stars = document.querySelectorAll('#rd-star-rating-btn .star');
+    const boots = document.querySelectorAll('#rd-difficulty-rating-btn .boot');
+
+    function showAlert(arg_container, arg_class, arg_message){
+        arg_container.className = arg_class;
+        arg_container.textContent = arg_message;
+
+        if(arg_class === 'alert alert-success'){
+            setTimeout(() => {
+                arg_container.style.opacity = '0';
+            }, 2000);
+
+            setTimeout(() => {
+                arg_container.className = '';
+                arg_container.textContent = '';
+                arg_container.style.opacity = '';
+            }, 2500);
+        }
+    }
+
+    function click_rdApplyRouteChangesButton(e){
+        e.preventDefault();
+
+        // const log_data = {routeId: routeId, name: rdNameDisplay.textContent, startDate: rdStartDateButton.value, endDate: rdEndDateButton.value, rating: selectedRating, difficulty: selectedDifficulty, description: rdDescriptionTextarea.value, isPlan: rdCompletionToogleButton.textContent === '⏳', isPublished: rdStatusToogleButton.textContent === 'Published'};
+        // console.log('log_data=', log_data);
+
+        // Send data to save
+        fetch('/apply_route_changes/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                routeId: routeId,
+                name: rdNameDisplay.textContent,
+                startDate: rdStartDateButton.value,
+                endDate: rdEndDateButton.value,
+                rating: selectedRating,
+                difficulty: selectedDifficulty,
+                description: rdDescriptionTextarea.value,
+                isPlan: rdCompletionToogleButton.textContent === '⏳',
+                isPublished: rdStatusToogleButton.textContent === 'Published'
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(rdMessage, 'alert alert-success', 'Route saved successfully!');
+            }else {
+                console.error('Error:', data.error);
+                showAlert(rdMessage, 'alert alert-danger', 'An error occurred while saving the route.');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving route:', error);
+            showAlert(rdMessage, 'alert alert-danger', 'An error occurred while saving the route.');
+        });
+    }
+
+    function click_rdDescriptionEditButton(){
+        // Edit
+        if (rdDescriptionEditButton.textContent.trim() === '✏️') {
+            rdDescriptionTextarea.readOnly = false;
+            rdDescriptionTextarea.classList.add('editable');
+            rdDescriptionEditButton.innerHTML = '✅';
+            rdDescriptionTextarea.focus();
+            rdNameEditButton.setAttribute('title', 'Save description');
+            rdDescriptionTextarea.style.cursor = 'default'
+        // Save
+        } else {
+            rdDescriptionTextarea.readOnly = true;
+            rdDescriptionTextarea.classList.remove('editable');
+            rdDescriptionEditButton.innerHTML = '✏️';
+            rdNameEditButton.setAttribute('title', 'Edit description');
+            rdDescriptionTextarea.style.cursor = 'not-allowed'
+        }
+    }
 
     function click_rdNameEditButton(){
         // Edit
@@ -1007,7 +1092,7 @@ function routeDetailsPage(){
             rdNameEditButton.setAttribute('title', 'Save route name');
         }
         // Save
-        else if (rdNameEditButton.textContent.trim() === '✅') {
+        else {
             const newName = rdNameInput.value.trim();
 
             if (newName) {
@@ -1029,7 +1114,8 @@ function routeDetailsPage(){
         const currentStatus = rdStatusToogleButton.textContent.trim();
         const newStatus = currentStatus === 'Published' ? 'Saved' : 'Published';
         rdStatusToogleButton.textContent = newStatus;
-        rdStatusToogleButton.setAttribute('title', newStatus === 'Published' ? 'bg-primary' : 'bg-success');
+        rdStatusToogleButton.classList.remove('bg-success', 'bg-primary');
+        rdStatusToogleButton.classList.add(newStatus === 'Published' ? 'bg-primary' : 'bg-success');
     }
 
     function click_rdCompletionToogleButton(){
@@ -1037,57 +1123,11 @@ function routeDetailsPage(){
         rdCompletionToogleButton.textContent = currentIcon === '🎯' ? '⏳' : '🎯';
     }
 
-    function applyRouteChangesButtonClick(e){
-        e.preventDefault();
-
-        // Собираем данные с текущей страницы
-        const routeId = "{{ route.id }}"; // Убедитесь, что идентификатор маршрута доступен
-        const routeName = document.getElementById('route-name-input').value || "{{ route.name }}";
-        const startDate = document.getElementById('start-date-input').value || "{{ route.start_date }}";
-        const endDate = document.getElementById('end-date-input').value || "{{ route.end_date }}";
-        const distance = "{{ route.distance }}"; // Или значение из формы, если редактируется
-        const duration = "{{ route.duration }}"; // Или значение из формы, если редактируется
-        const price = "{{ route.price }}"; // Или значение из формы, если редактируется
-
-        // Отправляем данные через Fetch
-        fetch('/save_route/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(), // Замените на вашу функцию получения CSRF токена
-            },
-            body: JSON.stringify({
-                routeId: routeId,
-                name: routeName,
-                startDate: startDate,
-                endDate: endDate,
-                distance: distance,
-                duration: duration,
-                price: price,
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Route saved successfully!');
-                location.reload(); // Перезагрузка страницы для обновления данных
-            } else {
-                alert(`Error: ${data.error}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error saving route:', error);
-            alert('An error occurred while saving the route.');
-        });
-    }
-
     function rateStars(){
-        const stars = document.querySelectorAll('#rd-star-rating-btn .star');
-
         stars.forEach((star, index) => {
             star.addEventListener('mouseover', () => {
                 stars.forEach((s, i) => {
-                    s.style.color = i <= index ? '#f0ad4e' : '#ddd';
+                    s.style.color = i <= index ? '#ffc107' : '#ddd';
                 });
             });
 
@@ -1102,14 +1142,11 @@ function routeDetailsPage(){
                 stars.forEach((s, i) => {
                     s.style.color = i < selectedRating ? '#ffc107' : '#ddd';
                 });
-                console.log(`Selected rating: ${selectedRating}`);
             });
         });
     }
 
     function bootDifficulty(){
-        const boots = document.querySelectorAll('#rd-difficulty-rating-btn .boot');
-
         boots.forEach((boot, index) => {
             boot.addEventListener('mouseover', () => {
                 boots.forEach((b, i) => {
@@ -1131,20 +1168,58 @@ function routeDetailsPage(){
                     b.style.color = i < selectedDifficulty ? '#ffc107' : '#ddd';
                     b.style.filter = i < selectedDifficulty ? 'brightness(100%)' : 'brightness(70%)';
                 });
-                console.log(`Selected Difficulty: ${selectedDifficulty}`);
             });
         });
     }
 
-    rateStars();
-    bootDifficulty();
+    // Init rating
+        if (rdRating > 0) {
+            selectedRating = rdRating;
+            stars.forEach((s, i) => {
+                s.style.color = i < selectedRating ? '#ffc107' : '#ddd';
+            });
+        }
 
-    // Apply changes
+    // Init Difficulty
+    if (rdDifficulty > 0) {
+        selectedDifficulty = rdDifficulty;
+        boots.forEach((b, i) => {
+            b.style.color = i < selectedDifficulty ? '#ffc107' : '#ddd';
+            b.style.filter = i < selectedDifficulty ? 'brightness(100%)' : 'brightness(70%)';
+        });
+    }
+
+    // Apply changes button
     if (isOwner) {
+        rdStarsRatingButton.classList.remove('no-interaction');
+        rdBootsDifficultyButton.classList.remove('no-interaction');
+
+        rdStatusToogleButton.disabled = false;
+        rdCompletionToogleButton.style.display = 'block';
+        rdNameEditButton.style.display = 'block';
+        rdStartDateButton.disabled = false;
+        rdEndDateButton.disabled = false;
+        rdDescriptionEditButton.style.display = 'block';
+        rdApplyRouteChangesButton.style.display = 'block';
+
         rdNameEditButton.addEventListener('click', click_rdNameEditButton);
         rdStatusToogleButton.addEventListener('click', click_rdStatusToogleButton);
         rdCompletionToogleButton.addEventListener('click', click_rdCompletionToogleButton);
-        applyRouteChangesButton.addEventListener('click', applyRouteChangesButtonClick);
+        rdApplyRouteChangesButton.addEventListener('click', click_rdApplyRouteChangesButton);
+        rdDescriptionEditButton.addEventListener('click', click_rdDescriptionEditButton);
+        rateStars();
+        bootDifficulty();
+    }
+    else {
+        rdStarsRatingButton.classList.add('no-interaction');
+        rdBootsDifficultyButton.classList.add('no-interaction');
+        rdStatusToogleButton.disabled = true;
+        rdCompletionToogleButton.style.display = 'none';
+        rdNameEditButton.style.display = 'none';
+        rdStartDateButton.disabled = true;
+        rdEndDateButton.disabled = true;
+        rdDescriptionEditButton.style.display = 'none';
+        rdApplyRouteChangesButton.style.display = 'none';
     }
 }
 

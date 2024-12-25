@@ -7,9 +7,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.core.files.storage import default_storage
 from django.utils import timezone
+from django.utils.timezone import make_aware
 from django.forms.models import model_to_dict
 from django.db.models import F
-
 from datetime import datetime
 import json
 import requests
@@ -420,7 +420,8 @@ def route_detail(request, route_id):
         "route": tmp_route,
         "places": places,
         'is_owner': is_owner,
-        "user": user,
+        "user_info": user,
+        "user": request.user
     })
 
 
@@ -455,28 +456,24 @@ def apply_route_changes(request):
         try:
             data = json.loads(request.body)
             route_id = data.get('routeId')
-            name = data.get('name')
-            start_date = data.get('startDate')
-            end_date = data.get('endDate')
-            distance = data.get('distance')
-            duration = data.get('duration')
-            price = data.get('price')
 
             route = Route.objects.get(id=route_id)
 
-            if route.user != request.user:
-                return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+            route.name = data.get('name')
+            route.start_date = make_aware(datetime.strptime(data.get('startDate'), "%Y-%m-%dT%H:%M"))
+            route.end_date = make_aware(datetime.strptime(data.get('endDate'), "%Y-%m-%dT%H:%M"))
+            route.rating = data.get('rating')
+            route.difficulty = data.get('difficulty')
+            route.description = data.get('description')
+            route.isPlan = data.get('isPlan')
+            route.isPublished = data.get('isPublished')
 
-            # Обновляем данные маршрута
-            route.name = name
-            route.start_date = start_date
-            route.end_date = end_date
-            route.distance = float(distance) if distance else 0
-            route.duration = float(duration) if duration else 0
-            route.price = float(price) if price else 0
+            # log_data ={"name": data.get('name'), "start_date": make_aware(datetime.strptime(data.get('startDate'), "%Y-%m-%dT%H:%M")), "end_date": make_aware(datetime.strptime(data.get('endDate'), "%Y-%m-%dT%H:%M")), "rating": data.get('rating'), "difficulty": data.get('difficulty'), "description": data.get('description'), "isPlan": data.get('isPlan'), "isPublished": data.get('isPublished')}
+            # print(f"log_data={log_data}")
+
             route.save()
 
-            return JsonResponse({'success': True})
+            return JsonResponse({'success': True, 'message': 'Route saved successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
