@@ -22,6 +22,7 @@ urlpatterns = [
     path('route/<int:route_id>/', views.route_detail, name='route_detail'),
     path('routes/<str:view_type>/', views.routes_view, name='routes_view'),
     path('apply_route_changes/', views.apply_route_changes, name='apply_route_changes'),
+    path('delete_route/<int:route_id>/', views.delete_route, name='delete_route'),
 ]
 
 if settings.DEBUG:

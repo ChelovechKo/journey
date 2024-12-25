@@ -1,6 +1,23 @@
 let editingPlaceId = null;
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+function showAlert(arg_container, arg_class, arg_message){
+    arg_container.className = arg_class;
+    arg_container.textContent = arg_message;
+
+    if(arg_class === 'alert alert-success'){
+        setTimeout(() => {
+            arg_container.style.opacity = '0';
+        }, 2000);
+
+        setTimeout(() => {
+            arg_container.className = '';
+            arg_container.textContent = '';
+            arg_container.style.opacity = '';
+        }, 2500);
+    }
+}
+
 // Add and Edit Point on the User's Map
 function myPlaces(){
     const map = L.map("map").setView([51.505, -0.09], 2);  // Init Map
@@ -979,7 +996,7 @@ function avatarEditing(){
     }
 }
 
-//Route Details Page
+// Route Details Page
 function routeDetailsPage(){
     let selectedRating = 0;
     let selectedDifficulty = 0;
@@ -1001,27 +1018,37 @@ function routeDetailsPage(){
     const rdDescriptionEditButton = document.getElementById('rd-description-edit-btn');
     const rdDescriptionTextarea = document.getElementById('rd-description');
     const rdApplyRouteChangesButton = document.getElementById('rd-apply-route-changes-btn');
+    const rdDeleteRouteButton = document.getElementById('rd-delete-route-btn');
     const rdStarsRatingButton = document.getElementById('rd-star-rating-btn');
     const rdBootsDifficultyButton = document.getElementById('rd-difficulty-rating-btn');
+
+    const confirmDeleteButton = document.getElementById('confirmDeleteRoute');
 
     const stars = document.querySelectorAll('#rd-star-rating-btn .star');
     const boots = document.querySelectorAll('#rd-difficulty-rating-btn .boot');
 
-    function showAlert(arg_container, arg_class, arg_message){
-        arg_container.className = arg_class;
-        arg_container.textContent = arg_message;
+    function click_rdDeleteRouteButton(){
+        const deleteRouteModal = new bootstrap.Modal(document.getElementById('deleteRouteModal'));
+        deleteRouteModal.show();
+    }
 
-        if(arg_class === 'alert alert-success'){
-            setTimeout(() => {
-                arg_container.style.opacity = '0';
-            }, 2000);
-
-            setTimeout(() => {
-                arg_container.className = '';
-                arg_container.textContent = '';
-                arg_container.style.opacity = '';
-            }, 2500);
-        }
+    function click_confirmDeleteButton(){
+        fetch(`/delete_route/${routeId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.href = '/routes/my_routes/'; // Redirect to routes list
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
     }
 
     function click_rdApplyRouteChangesButton(e){
@@ -1201,11 +1228,15 @@ function routeDetailsPage(){
         rdEndDateButton.disabled = false;
         rdDescriptionEditButton.style.display = 'block';
         rdApplyRouteChangesButton.style.display = 'block';
+        rdDeleteRouteButton.style.display = 'block';
+        confirmDeleteButton.style.display = 'block';
 
         rdNameEditButton.addEventListener('click', click_rdNameEditButton);
         rdStatusToogleButton.addEventListener('click', click_rdStatusToogleButton);
         rdCompletionToogleButton.addEventListener('click', click_rdCompletionToogleButton);
         rdApplyRouteChangesButton.addEventListener('click', click_rdApplyRouteChangesButton);
+        rdDeleteRouteButton.addEventListener('click', click_rdDeleteRouteButton);
+        confirmDeleteButton.addEventListener('click', click_confirmDeleteButton);
         rdDescriptionEditButton.addEventListener('click', click_rdDescriptionEditButton);
         rateStars();
         bootDifficulty();
@@ -1220,7 +1251,51 @@ function routeDetailsPage(){
         rdEndDateButton.disabled = true;
         rdDescriptionEditButton.style.display = 'none';
         rdApplyRouteChangesButton.style.display = 'none';
+        rdDeleteRouteButton.style.display = 'none';
+        confirmDeleteButton.style.display = 'none';
     }
+}
+
+// Routes Cards
+function routes(){
+    const deleteButtons = document.querySelectorAll('.routes-delete-route-btn');
+    const confirmDeleteButton = document.getElementById('confirmDeleteRoute');
+    const routeMessage = document.getElementById('route-message');
+    let selectedRouteId = null;
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            selectedRouteId = this.getAttribute('data-route-id');
+        });
+    });
+
+    confirmDeleteButton.addEventListener('click', function () {
+        if (selectedRouteId) {
+            fetch(`/delete_route/${selectedRouteId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close the modal and remove the route card
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
+                    modal.hide();
+                    document.querySelector(`[data-route-id="${selectedRouteId}"]`).closest('.col-md-4').remove();
+                    showAlert(routeMessage, 'alert alert-success', 'Route saved successfully!');
+                } else {
+                    console.error('Error: ', data.error);
+                    showAlert(routeMessage, 'alert alert-danger', 'An error occurred while saving the route.');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving route:', error);
+                showAlert(routeMessage, 'alert alert-danger', 'An error occurred while saving the route.');
+            });
+        }
+    });
 }
 
 // main
@@ -1241,5 +1316,7 @@ document.addEventListener('DOMContentLoaded', function() {
         myPlaces();
     } else if(currentUrl.includes('/route/')){
         routeDetailsPage();
+    } else if(currentUrl.includes('/routes/')){
+        routes();
     }
 });

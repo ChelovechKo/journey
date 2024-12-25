@@ -377,7 +377,7 @@ html, body {
 }
 
 .fixed-height-card {
-    height: 160px;
+    height: 180px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -465,6 +465,15 @@ html, body {
 }
 
 #rd-apply-route-changes-btn:hover {
+    transform: scale(1.1);
+}
+
+#rd-delete-route-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#rd-delete-route-btn:hover {
     transform: scale(1.1);
 }
 
