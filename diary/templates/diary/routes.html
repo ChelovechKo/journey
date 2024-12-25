@@ -11,7 +11,10 @@
             <div class="row">
                 {% for route in routes %}
                     <div class="col-md-4 mb-4">
-                        <div class="card route-card shadow-sm position-relative fixed-height-card" onclick="window.location.href='/route/{{ route.id }}/';">
+                        <div class="card route-card shadow-sm position-relative fixed-height-card"
+                             data-route-id="{{ route.id }}"
+                             data-is-draft="{{ route.isDraft }}"
+                             onclick="handleRouteClick(this);">
                             <!-- Route's status top-left badge -->
                             <span class="badge position-absolute top-0 start-0 m-2
                                 {% if route.isDraft %} bg-secondary {% elif route.isPublished %} bg-primary {% else %} bg-success{% endif %}">

@@ -486,7 +486,7 @@ def delete_route(request, route_id):
         try:
             route = Route.objects.get(id=route_id, user=request.user)
             route.delete()
-            return JsonResponse({'success': True, 'message': 'Route deleted successfully.'})
+            return JsonResponse({'success': True, 'message': 'Route deleted successfully!'})
         except Route.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Route not found.'})
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)

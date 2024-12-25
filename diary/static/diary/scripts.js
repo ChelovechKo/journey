@@ -1,6 +1,19 @@
 let editingPlaceId = null;
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+function handleRouteClick(cardElement) {
+    const routeId = cardElement.getAttribute('data-route-id');
+    const isDraft = cardElement.getAttribute('data-is-draft').toLowerCase() === 'true';
+
+    if (isDraft) {
+        // Redirect to the my-places page
+        window.location.href = '/my-places/';
+    } else {
+        // Redirect to the route detail page
+        window.location.href = `/route/${routeId}/`;
+    }
+}
+
 function showAlert(arg_container, arg_class, arg_message){
     arg_container.className = arg_class;
     arg_container.textContent = arg_message;
@@ -1042,13 +1055,17 @@ function routeDetailsPage(){
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
+                showAlert(rdMessage, 'alert alert-success', 'Route deleted successfully!');
                 window.location.href = '/routes/my_routes/'; // Redirect to routes list
             } else {
-                alert('Error: ' + data.error);
+                console.error('Error: ', data.error);
+                showAlert(rdMessage, 'alert alert-danger', 'An error occurred while deleting the route.');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error deleting route:', error);
+            showAlert(rdMessage, 'alert alert-danger', 'An error occurred while deleting the route.');
+        });
     }
 
     function click_rdApplyRouteChangesButton(e){
@@ -1284,15 +1301,15 @@ function routes(){
                     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
                     modal.hide();
                     document.querySelector(`[data-route-id="${selectedRouteId}"]`).closest('.col-md-4').remove();
-                    showAlert(routeMessage, 'alert alert-success', 'Route saved successfully!');
+                    showAlert(routeMessage, 'alert alert-success', 'Route deleted successfully!');
                 } else {
                     console.error('Error: ', data.error);
-                    showAlert(routeMessage, 'alert alert-danger', 'An error occurred while saving the route.');
+                    showAlert(routeMessage, 'alert alert-danger', 'An error occurred while deleting the route.');
                 }
             })
             .catch(error => {
-                console.error('Error saving route:', error);
-                showAlert(routeMessage, 'alert alert-danger', 'An error occurred while saving the route.');
+                console.error('Error deleting route:', error);
+                showAlert(routeMessage, 'alert alert-danger', 'An error occurred while deleting the route.');
             });
         }
     });
