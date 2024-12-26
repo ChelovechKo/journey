@@ -1,6 +1,22 @@
 let editingPlaceId = null;
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+const toggleButtons = document.querySelectorAll(".btn-toggle");
+
+// Collapse SidebarGroup
+function collapseSidebarGroup(button){
+    const sidebarGroup = button.closest(".sidebar-group");
+    const content = sidebarGroup.querySelector(".group-content");
+
+    content.classList.toggle("hidden");
+
+    if (content.classList.contains("hidden")) {
+        button.innerHTML = "+";
+    } else {
+        button.innerHTML = "&minus;";
+    }
+}
+
 function handleRouteClick(cardElement) {
     const routeId = cardElement.getAttribute('data-route-id');
     const isDraft = cardElement.getAttribute('data-is-draft').toLowerCase() === 'true';
@@ -40,7 +56,6 @@ function myPlaces(){
     const categoriesData = JSON.parse(document.getElementById("categories-data").textContent);
     const LegendToggleBtn = document.getElementById('legend-toggle-btn');
     const mapLegend = document.getElementById('map-legend');
-    const toggleButtons = document.querySelectorAll(".btn-toggle");
     const placeForm = document.getElementById('place-form');
     const routePoints = document.getElementById('route-points');
     const submitPlaceButton = placeForm.querySelector('button[type="submit"]');
@@ -49,27 +64,38 @@ function myPlaces(){
     const nameDisplayEl = document.getElementById("place-name-display");
     const getDirectionButton = document.getElementById('get-direction-btn');
     const saveRouteButton = document.getElementById('save-route-btn');
+    const routeDetails = document.getElementById("route-details");
+    const routeId = routeDetails.getAttribute("route-id");
     let userMapMarkers = [];
 
     let isLegendVisible = true;
     let hideTimeout;
 
+    // get route's data
+    function extractRouteData() {
+        if (!window.currentRoute) {
+            console.error("No route available to save.");
+            return [];
+        }
+
+        return window.currentRoute.getWaypoints().map((waypoint, i) => ({
+            lat: waypoint.latLng.lat,
+            lng: waypoint.latLng.lng,
+            pointId: waypoint.options.pointId || null,
+            isVisited: waypoint.options.isVisited || false,
+            name: waypoint.name || '',
+            order: i + 1
+        }));
+    }
+
     // Save Route
     function saveRouteButtonClick(){
-        const routeDetails = document.getElementById("route-details");
-        const routeId = routeDetails.getAttribute("route-id");
         const distance = document.getElementById("route-distance-save").value;
         const duration = document.getElementById("route-duration-save").value;
         const price = document.getElementById("route-price-save").value;
 
         // Save waypoints
-        const waypoints = window.currentRoute.getWaypoints().map((waypoint, i) => ({
-            lat: waypoint.latLng.lat,
-            lng: waypoint.latLng.lng,
-            pointId: waypoint.options.pointId || null,
-            isVisited: waypoint.options.isVisited || false,
-            order: i + 1
-        }));
+        const waypoints = extractRouteData();
 
         // Send form
         fetch('/save_route/', {
@@ -108,7 +134,8 @@ function myPlaces(){
             longitude: parseFloat(item.getAttribute('data-longitude')),
             isVisited: item.getAttribute('data-is-visited').toLowerCase() === 'true',
             pointId: item.getAttribute('data-point-id'),
-            price: parseFloat(item.getAttribute('data-price')) || 0
+            price: parseFloat(item.getAttribute('data-price')) || 0,
+            name: item.querySelector('.card-title').textContent
         }));
 
         if (points.length < 2) {
@@ -128,7 +155,7 @@ function myPlaces(){
         const waypoints = points.map(point => {
             return L.Routing.waypoint(
                 L.latLng(point.latitude, point.longitude),
-                null, // Optional name
+                point.name,
                 { pointId: point.pointId, isVisited: point.isVisited } // Custom options
             );
         });
@@ -141,29 +168,25 @@ function myPlaces(){
         // Add Route with Leaflet Routing Machine
         window.currentRoute = L.Routing.control({
             waypoints: waypoints,
-            routeWhileDragging: true,
+            routeWhileDragging: false,
             lineOptions: {
                 styles: [{ color: 'blue', weight: 4 }]
             },
             createMarker: function(i, waypoint) {
-                // i: order
-                // waypoint: point info
-                const pointOrder = i + 1; // order
-                const isVisited = waypoint.options.isVisited || false;
+                // i: order, waypoint: point info
+                if (isCircularRoute && i === waypoints.length - 1) {
+                        return null;
+                }
 
                 const markerIcon = L.divIcon({
-                    className: isVisited ? 'visited-marker' : 'unvisited-marker',
-                    html: `<div class="marker-icon">#${pointOrder}</div>`,
+                    className: waypoint.options.isVisited ? 'visited-marker' : 'unvisited-marker',
+                    html: `<div class="marker-icon">#${i + 1}</div>`,
                     iconSize: [25, 41],
                     iconAnchor: [12, 41]
                 });
 
                 const marker = L.marker(waypoint.latLng, { icon: markerIcon });
-
-                // Get pointId from waypoint.options
-                const pointId = waypoint.options.pointId;
-                marker.on('click', () => {handleMarkerClick(pointId);});
-
+                marker.on('click', () => {handleMarkerClick(waypoint.options.pointId);});
                 return marker;
             }
         }).addTo(map);
@@ -193,7 +216,14 @@ function myPlaces(){
             document.getElementById('route-duration-save').value = totalTime;
 
             // Calculate total route price
-            const totalPrice = points.reduce((sum, point) => sum + point.price, 0);
+            let totalPrice;
+            if (isCircularRoute) {
+                // If the route is circular, exclude the last point
+                totalPrice = points.slice(0, -1).reduce((sum, point) => sum + point.price, 0);
+            } else {
+                // For a linear route, include all points
+                totalPrice = points.reduce((sum, point) => sum + point.price, 0);
+            }
 
             document.getElementById('route-price').textContent = `${totalPrice.toFixed(2)}`;
             document.getElementById('route-price-save').value = totalPrice.toFixed(2);
@@ -207,6 +237,7 @@ function myPlaces(){
         points.forEach(point => {
             // In Place's Card
             const pointCard = document.querySelector(`.point-item[data-point-id="${point.id}"]`);
+
             if (pointCard) {
                 pointCard.setAttribute('data-order', point.order);
                 pointCard.querySelector('.badge').textContent = point.order;
@@ -225,15 +256,16 @@ function myPlaces(){
             }
         });
 
-        // Reset the existing route and clean route dtails
+        // Reset the existing route and clean route details
         if (window.currentRoute) {
             map.removeControl(window.currentRoute);
             window.currentRoute = null;
         }
         document.getElementById('route-distance').textContent = '?';
         document.getElementById('route-duration').textContent = '?';
+        document.getElementById('route-price').textContent = '?';
 
-        saveRouteButton.style.display = "block";
+        saveRouteButton.style.display = "none";
     }
 
     // Delete point on the Route
@@ -246,7 +278,7 @@ function myPlaces(){
             headers: {
                 'X-CSRFToken': csrfToken,
                 'Content-Type': 'application/json'
-            },
+            }
         })
         .then(response => response.json())
         .then(data => {
@@ -271,7 +303,7 @@ function myPlaces(){
     function handleMarkerClick(pointId) {
         const pointCard = document.querySelector(`.point-item[data-point-id="${pointId}"]`);
         if (pointCard) {
-            // Создаем и отправляем событие "click"
+            // Create and send event "click"
             const clickEvent = new MouseEvent('click', {
                 bubbles: true,
                 cancelable: true,
@@ -340,6 +372,7 @@ function myPlaces(){
         const placeForm = event.target;
         const formData = new FormData(placeForm);
         formData.append('placeId', editingPlaceId);
+        formData.append('routeId', routeId);
 
         if(submitPlaceButton.textContent === 'Edit Point'){
             fetch(`/update_point/${editingPlaceId}/`, {
@@ -800,20 +833,6 @@ function myPlaces(){
         }, 300);
     }
 
-    // Collapse SidebarGroup
-    function collapseSidebarGroup(button){
-        const sidebarGroup = button.closest(".sidebar-group");
-        const content = sidebarGroup.querySelector(".group-content");
-
-        content.classList.toggle("hidden");
-
-        if (content.classList.contains("hidden")) {
-            button.innerHTML = "+";
-        } else {
-            button.innerHTML = "&minus;";
-        }
-    }
-
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -836,6 +855,12 @@ function myPlaces(){
     // Map Handle
     map.on("moveend", () => {updateMapWithOSMData();});
 
+    // Reset the existing route and clean route details
+    if (window.currentRoute) {
+        map.removeControl(window.currentRoute);
+        window.currentRoute = null;
+    }
+
     // Hide/Show ToggleLegendBtn
     mapLegend.addEventListener("mouseenter", showToggleLegendBtn);
     mapLegend.addEventListener("mouseleave", hideToggleLegendBtn);
@@ -845,10 +870,6 @@ function myPlaces(){
     LegendToggleBtn.addEventListener("mouseleave", hideToggleLegendBtn);
 
     LegendToggleBtn.addEventListener('click', hideShowMapLegend);
-
-    toggleButtons.forEach(button => {
-        button.addEventListener("click", () => {collapseSidebarGroup(button);});
-    });
 
     // Click on the Point Card to edit info
     routePoints.addEventListener('click', handlePointClick);
@@ -897,7 +918,10 @@ function myPlaces(){
                         'X-CSRFToken': csrfToken,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ order: pointOrder })
+                    body: JSON.stringify({
+                        route_id: routeId,
+                        order: pointOrder
+                    })
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -1040,6 +1064,8 @@ function routeDetailsPage(){
     let selectedRating = 0;
     let selectedDifficulty = 0;
 
+    const rdRoutePoints = document.getElementById('rd-route-points');
+
     const routeInfo = document.getElementById('routeJSinfo');
     const isOwner = routeInfo.getAttribute('rd-is-owner') === 'true';
     const routeId = routeInfo.getAttribute('rd-route-id');
@@ -1060,6 +1086,7 @@ function routeDetailsPage(){
     const rdDeleteRouteButton = document.getElementById('rd-delete-route-btn');
     const rdStarsRatingButton = document.getElementById('rd-star-rating-btn');
     const rdBootsDifficultyButton = document.getElementById('rd-difficulty-rating-btn');
+    const rdPointsEditButton = document.getElementById('rd-points-edit-btn');
 
     const confirmDeleteButton = document.getElementById('confirmDeleteRoute');
 
@@ -1193,6 +1220,10 @@ function routeDetailsPage(){
         rdCompletionToogleButton.textContent = currentIcon === '🎯' ? '⏳' : '🎯';
     }
 
+    function click_rdPointsEditButton(){
+        window.location.href = `/my-places/?route_id=${routeId}`;
+    }
+
     function rateStars(){
         stars.forEach((star, index) => {
             star.addEventListener('mouseover', () => {
@@ -1242,8 +1273,125 @@ function routeDetailsPage(){
         });
     }
 
+    // Click on point = click on the place's card
+    function hover_rdMarker(pointId, eventType) {
+        const pointCard = document.querySelector(`.point-item[rd-point-id="${pointId}"]`);
+        if (pointCard) {
+            // Emulate hover behavior
+            if (eventType === 'mouseover') {
+                pointCard.classList.add('hovered');
+            } else if (eventType === 'mouseout') {
+                pointCard.classList.remove('hovered');
+            }
+
+            // Create and send event "click"
+            const hoverEvent = new MouseEvent(eventType, {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+            });
+
+            pointCard.dispatchEvent(hoverEvent);
+        }
+    }
+
+    function mouse_over_rdPoint(e) {
+        const pointCard = e.target.closest('.point-item');
+        if (!pointCard) return;
+
+        const pointId = pointCard.getAttribute('rd-point-id');
+
+        const enlargedIcon = L.divIcon({
+            className: rdWaypoints[pointId].isVisited ? 'visited-marker' : 'unvisited-marker',
+            html: `<div class="marker-icon">#${rdWaypoints[pointId].order}</div>`,
+            iconSize: [35, 55],
+            iconAnchor: [17, 55]
+        });
+
+        const marker = rdWaypoints[pointId]["marker"];
+        marker.setIcon(enlargedIcon);
+    }
+
+    function mouse_out_rdPoint(e) {
+        const pointCard = e.target.closest('.point-item');
+        if (!pointCard) return;
+
+        const pointId = pointCard.getAttribute('rd-point-id');
+
+        const originalIcon = L.divIcon({
+            className: rdWaypoints[pointId].isVisited ? 'visited-marker' : 'unvisited-marker',
+            html: `<div class="marker-icon">#${rdWaypoints[pointId].order}</div>`,
+            iconSize: [25, 41],
+            iconAnchor: [12, 41]
+        });
+
+        const marker = rdWaypoints[pointId]["marker"];
+        marker.setIcon(originalIcon);
+    }
+
+    // Add Route on the map
+    if (rdWaypoints && Object.keys(rdWaypoints).length > 0) {
+        const rdWaypointsArray = Object.values(rdWaypoints).sort((a, b) => a.order - b.order);
+        const isCircularRoute = rdWaypointsArray[0].latitude === rdWaypointsArray[rdWaypointsArray.length - 1].latitude &&
+                            rdWaypointsArray[0].longitude === rdWaypointsArray[rdWaypointsArray.length - 1].longitude;
+
+        // map init
+        const map = L.map('rd-map-container').setView([rdWaypointsArray[0].latitude, rdWaypointsArray[0].longitude], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        // restore route
+        const routeControl = L.Routing.control({
+            waypoints: rdWaypointsArray.map(point => {
+                return L.Routing.waypoint(
+                    L.latLng(point.latitude, point.longitude),
+                    point.name,
+                    {pointId: point.id, isVisited: point.isVisited, order: point.order}
+                );
+            }),
+            routeWhileDragging: false, // prohibition of moving route points
+            lineOptions: { styles: [{ color: 'blue', weight: 4 }] },
+            createMarker: function(i, waypoint) {
+                // i: order, waypoint: point info
+                if (isCircularRoute && i === rdWaypointsArray.length - 1) {
+                    return null;
+                }
+
+                const markerIcon = L.divIcon({
+                    className: waypoint.options.isVisited ? 'visited-marker' : 'unvisited-marker',
+                    html: `<div class="marker-icon">#${i + 1}</div>`,
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                });
+
+                const marker = L.marker(waypoint.latLng, { icon: markerIcon });
+                rdWaypoints[waypoint.options.pointId]["marker"] = marker;
+
+                // bindTooltip
+                marker.bindTooltip(`<strong>${waypoint.name}</strong>`, {permanent: false, direction: "top", offset: [0, -40]});
+
+                marker.on('mouseover', () => {
+                    hover_rdMarker(waypoint.options.pointId, 'mouseover');
+                });
+
+                marker.on('mouseout', () => {
+                    hover_rdMarker(waypoint.options.pointId, 'mouseout');
+                });
+
+                return marker;
+            }
+        }).addTo(map);
+
+        // Setting boundaries after building a route
+        routeControl.on('routesfound', function (e) {
+            const route = e.routes[0]; // first route
+            const bounds = L.latLngBounds(route.coordinates); // define the boundaries of the route
+            // Set the map area
+            map.fitBounds(bounds, {padding: [50, 50]});
+        });
+    }
+
     // Init rating
-        if (rdRating > 0) {
+    if (rdRating > 0) {
             selectedRating = rdRating;
             stars.forEach((s, i) => {
                 s.style.color = i < selectedRating ? '#ffc107' : '#ddd';
@@ -1273,6 +1421,7 @@ function routeDetailsPage(){
         rdApplyRouteChangesButton.style.display = 'block';
         rdDeleteRouteButton.style.display = 'block';
         confirmDeleteButton.style.display = 'block';
+        rdPointsEditButton.style.display = 'block';
 
         rdNameEditButton.addEventListener('click', click_rdNameEditButton);
         rdStatusToogleButton.addEventListener('click', click_rdStatusToogleButton);
@@ -1281,6 +1430,8 @@ function routeDetailsPage(){
         rdDeleteRouteButton.addEventListener('click', click_rdDeleteRouteButton);
         confirmDeleteButton.addEventListener('click', click_confirmDeleteButton);
         rdDescriptionEditButton.addEventListener('click', click_rdDescriptionEditButton);
+        rdPointsEditButton.addEventListener('click', click_rdPointsEditButton);
+
         rateStars();
         bootDifficulty();
     }
@@ -1296,7 +1447,11 @@ function routeDetailsPage(){
         rdApplyRouteChangesButton.style.display = 'none';
         rdDeleteRouteButton.style.display = 'none';
         confirmDeleteButton.style.display = 'none';
+        rdPointsEditButton.style.display = 'none';
     }
+
+    rdRoutePoints.addEventListener('mouseover', mouse_over_rdPoint);
+    rdRoutePoints.addEventListener('mouseout', mouse_out_rdPoint);
 }
 
 // Routes Cards
@@ -1352,6 +1507,8 @@ document.addEventListener('DOMContentLoaded', function() {
             fallbackPlacements: []
         });
     });
+
+    toggleButtons.forEach(button => button.addEventListener("click", () => collapseSidebarGroup(button)));
 
     if(currentUrl.includes('profile') || currentUrl.includes('register')){
         avatarEditing();

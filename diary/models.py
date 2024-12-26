@@ -66,8 +66,6 @@ class Route(models.Model):
     isDraft = models.BooleanField(default=False)  # True - is Draft, False - is Done
     isPublished = models.BooleanField(default=False)  # True - is Published, False - is not
 
-    waypoints = models.JSONField(default=list) # Saved route direction
-
     def __str__(self):
         return f"{self.id}-{self.name}"
 
@@ -93,7 +91,7 @@ class Place(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="places", null=True, blank=True)
 
     def __str__(self):
-        return f"id={self.id}, order={self.order}, name={self.name}"
+        return f"RouteId={self.route_id}, id={self.id}, order={self.order}, name={self.name}"
 
     def save(self, *args, **kwargs):
         # auto order from 1 to ...
@@ -103,4 +101,4 @@ class Place(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        ordering = ['order']  # default: sort by order
+        ordering = ['route_id', 'order'] # sorting

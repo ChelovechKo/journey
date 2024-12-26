@@ -2,7 +2,7 @@
 
 {% block body %}
 <div class="mx-4 my-3">
-    <div class="container-lg mt-3 position-relative">
+    <div class="container-fluid mt-3 position-relative">
         <!-- Flash Messages -->
         <div id="rd-message"></div>
     
@@ -83,23 +83,7 @@
                 <!-- Map Container -->
                 <div class="mb-4">
                     <h3>Route Map</h3>
-                    <div id="map-container" style="height: 500px; border: 1px solid #ddd;"></div>
-                </div>
-            
-                <!-- Route's Points -->
-                <div class="mb-3">
-                    <h3>Points</h3>
-                    <ul class="list-group">
-                        {% for place in places %}
-                            <li class="list-group-item">
-                                <strong>{{ place.order }}. {{ place.name }}</strong>
-                                <br>
-                                {{ place.city }}, {{ place.country }}
-                                <br>
-                                <small>{{ place.address }}</small>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    <div id="rd-map-container" style="height: 700px; border: 1px solid #ddd;"></div>
                 </div>
             
                 <!-- Route Description -->
@@ -119,93 +103,166 @@
             </div>
 
             <!-- Info Column (3/12) -->
-            <div class="col-md-3 d-flex flex-column border-start ps-3">
-                <!-- Title -->
-                <div class="justify-content-center flex-column d-flex align-items-center">
-                    <h5>Route Overview</h5>
-                    <hr class="w-100">
+            <div class="col-md-3 bg-light p-3 sidebar">
+                <div class="sidebar-group position-relative">
+                    <!-- Title Route Overview -->
+                    <h5 class="group-title">Route Overview</h5>
+                    
+                    <!-- Hidden Button -->
+                    <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
+                    
+                    <!-- Route Overview Section -->
+                    <div class="group-content" id="rd-route-overview-section">
+                        <div class="align-items-start">
+                            <!-- Rating -->
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="me-2 text-muted small">Rating:</span>
+            
+                                <div id="rd-star-rating-btn" class="d-flex">
+                                    <span class="star" data-value="1" title="1 Star" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                    <span class="star" data-value="2" title="2 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                    <span class="star" data-value="3" title="3 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                    <span class="star" data-value="4" title="4 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                    <span class="star" data-value="5" title="5 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                </div>
+                            </div>
+            
+                            <!-- Distance -->
+                            <div class="d-flex align-items-center gap-1 mb-2">
+                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
+                                <span class="text-muted small text-nowrap">{{ route.form_distance }}</span>
+                            </div>
+            
+                            <!-- Duration -->
+                            <div class="d-flex align-items-center gap-1 mb-2">
+                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration">🕒</span>
+                                <span class="text-muted small text-nowrap">{{ route.form_duration }}</span>
+                            </div>
+            
+                            <!-- Price -->
+                            <div class="d-flex align-items-center gap-1 mb-2">
+                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
+                                <span class="text-muted small text-nowrap">{{ route.price }}</span>
+                            </div>
+            
+                            <!-- Start Date -->
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-calendar-event text-dark"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="Start Date"
+                                   style="cursor: pointer;"></i>
+                                <input type="datetime-local" id="rd-start-date-btn" name="start-date"
+                                       class="form-control"
+                                       value="{{ route.start_date|date:'Y-m-d\TH:i' }}">
+                            </div>
+            
+                            <!-- End Date -->
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-calendar-check text-dark"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="End Date"
+                                   style="cursor: pointer;"></i>
+                                <input type="datetime-local" id="rd-end-date-btn" name="end-date"
+                                       class="form-control"
+                                       value="{{ route.end_date|date:'Y-m-d\TH:i' }}">
+                            </div>
+                            
+                            <!-- Difficulty -->
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="me-2 text-muted small">Difficulty:</span>
+            
+                                <div id="rd-difficulty-rating-btn" class="d-flex">
+                                    <span class="boot" data-value="1" title="Easy" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                    <span class="boot" data-value="2" title="Moderate" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                    <span class="boot" data-value="3" title="Challenging" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                    <span class="boot" data-value="4" title="Difficult" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                    <span class="boot" data-value="5" title="Extreme" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="w-100">
+                        
+                        <!-- Submit button -->
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <!-- Apply Button  -->
+                            <button id="rd-apply-route-changes-btn" class="btn btn-primary">🗸 Apply changes</button>
+                            <!-- Delete Apply -->
+                            <button id="rd-delete-route-btn" class="btn btn-danger">✕ Delete Route</button>
+                        </div>
+                    </div>
                 </div>
             
-                <div class="align-items-start">
-                    <!-- Rating -->
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="me-2 text-muted small">Rating:</span>
-    
-                        <div id="rd-star-rating-btn" class="d-flex">
-                            <span class="star" data-value="1" title="1 Star" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                            <span class="star" data-value="2" title="2 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                            <span class="star" data-value="3" title="3 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                            <span class="star" data-value="4" title="4 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                            <span class="star" data-value="5" title="5 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                        </div>
-                    </div>
-    
-                    <!-- Distance -->
-                    <div class="d-flex align-items-center gap-1 mb-2">
-                        <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
-                        <span class="text-muted small text-nowrap">{{ route.form_distance }}</span>
-                    </div>
-    
-                    <!-- Duration -->
-                    <div class="d-flex align-items-center gap-1 mb-2">
-                        <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration">🕒</span>
-                        <span class="text-muted small text-nowrap">{{ route.form_duration }}</span>
-                    </div>
-    
-                    <!-- Price -->
-                    <div class="d-flex align-items-center gap-1 mb-2">
-                        <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
-                        <span class="text-muted small text-nowrap">{{ route.price }}</span>
-                    </div>
-    
-                    <!-- Start Date -->
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-calendar-event text-dark"
-                           data-bs-toggle="tooltip"
-                           data-bs-placement="top"
-                           title="Start Date"
-                           style="cursor: pointer;"></i>
-                        <input type="datetime-local" id="rd-start-date-btn" name="start-date"
-                               class="form-control"
-                               value="{{ route.start_date|date:'Y-m-d\TH:i' }}">
-                    </div>
-    
-                    <!-- End Date -->
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-calendar-check text-dark"
-                           data-bs-toggle="tooltip"
-                           data-bs-placement="top"
-                           title="End Date"
-                           style="cursor: pointer;"></i>
-                        <input type="datetime-local" id="rd-end-date-btn" name="end-date"
-                               class="form-control"
-                               value="{{ route.end_date|date:'Y-m-d\TH:i' }}">
-                    </div>
+                <div class="sidebar-group position-relative">
+                    <!-- Title Points -->
+                    <h5 class="group-title d-flex align-items-center justify-content-start">
+                        <span>Points</span>
+                        <span id="rd-points-edit-btn"
+                              class="ms-2"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title="Edit route's points">
+                            ✏️
+                        </span>
+                    </h5>
+                    <!-- Hidden Button -->
+                    <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
                     
-                    <!-- Difficulty -->
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="me-2 text-muted small">Difficulty:</span>
-    
-                        <div id="rd-difficulty-rating-btn" class="d-flex">
-                            <span class="boot" data-value="1" title="Easy" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                            <span class="boot" data-value="2" title="Moderate" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                            <span class="boot" data-value="3" title="Challenging" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                            <span class="boot" data-value="4" title="Difficult" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                            <span class="boot" data-value="5" title="Extreme" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                    <div class="group-content" id="rd-points-section">
+                        <div id="rd-route-points">
+                            {% for place in places.values %}
+                                <div class="point-item card mb-1 shadow-sm"
+                                    rd-point-id="{{ place.id }}">
+                                    <div class="card-body d-flex gap-2 position-relative">
+                                        <!-- Order number badge-->
+                                        <span class="badge bg-info position-absolute top-0 start-0">
+                                            {{ place.order }}
+                                        </span>
+                                        
+                                        <!-- Visited badge-->
+                                        <span class="badge position-absolute bottom-0 end-0"
+                                              data-bs-toggle="tooltip"
+                                              data-bs-placement="top"
+                                              title="{% if place.isVisited %}Visited{% else %}Not Visited{% endif %}">
+                                            {% if place.isVisited %}🎯{% else %}⏳{% endif %}
+                                        </span>
+                                        
+                                        <div class="d-flex flex-column align-items-start p-2">
+                                            <!-- Point's Details -->
+                                            <div class="d-flex">
+                                                <!-- Price -->
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
+                                                    <div>{{ place.price }}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Categories icon and name -->
+                                            <div class="d-flex">                                                
+                                                <div class="me-2" data-bs-toggle="tooltip" title="{{ place.category }}">
+                                                    <span class="icon-category">{{ place.icon }}</span>
+                                                </div>
+                                                <div>{{ place.name }}</div>
+                                            </div>
+                                            
+                                            <!-- Country + Address -->
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2" data-bs-toggle="tooltip" title="{{ place.country }}">
+                                                    <span class="flag-icon flag-icon-{{ place.countryISO }}"></span>
+                                                </div>
+                                                <div>{{ place.address }}</div>
+                                            </div>
+                                            
+                                        </div>                                        
+                                    </div>
+                                </div>
+                        {% endfor %}
                         </div>
                     </div>
                 </div>
-                
-                <hr class="w-100">
-                
-                <!-- Submit button -->
-                <div class="d-flex align-items-center justify-content-between mt-2">
-                    <!-- Apply Button  -->
-                    <button id="rd-apply-route-changes-btn" class="btn btn-primary">🗸 Apply changes</button>
-                    <!-- Delete Apply -->
-                    <button id="rd-delete-route-btn" class="btn btn-danger">✕ Delete Route</button>
-                </div>
-
+            
             </div>
         </div>
     
@@ -236,64 +293,7 @@
          rd-rating="{{ route.rating }}"
          rd-difficulty="{{ route.difficulty }}">
     </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const waypoints = {{ route.waypoints|safe }}; // Получаем waypoints из базы данных
-
-        if (!waypoints || waypoints.length === 0) {
-            alert('No waypoints available for this route.');
-            return;
-        }
-
-        // Инициализация карты
-        const map = L.map('map-container').setView([waypoints[0].lat, waypoints[0].lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19
-        }).addTo(map);
-
-        // Отображение маршрута
-        const routeLine = L.polyline(
-            waypoints.map(point => [point.lat, point.lng]),
-            { color: 'blue', weight: 4 }
-        ).addTo(map);
-
-        // Установка границ карты по маршруту
-        map.fitBounds(routeLine.getBounds());
-
-        // Добавление маркеров с информацией
-        waypoints.forEach((point, index) => {
-            const markerIcon = L.divIcon({
-                className: point.isVisited ? 'visited-marker' : 'unvisited-marker',
-                html: `<div class="marker-icon">#${index + 1}</div>`,
-                iconSize: [25, 41],
-                iconAnchor: [12, 41]
-            });
-
-            const marker = L.marker([point.lat, point.lng], { icon: markerIcon });
-            marker.bindTooltip(`Point #${index + 1}${point.isVisited ? ' (Visited)' : ''}`).openTooltip();
-            marker.addTo(map);
-        });
-    });
-</script>
-
-<style>
-    .visited-marker .marker-icon {
-        background-color: green;
-        color: white;
-        border-radius: 50%;
-        padding: 5px;
-        text-align: center;
-    }
-
-    .unvisited-marker .marker-icon {
-        background-color: red;
-        color: white;
-        border-radius: 50%;
-        padding: 5px;
-        text-align: center;
-    }
-</style>
+    <script>let rdWaypoints = {{ places|safe }};</script>
 </div>
 
 

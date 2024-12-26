@@ -330,7 +330,13 @@ html, body {
     background-color: #f8f9fa;
 }
 
-/* for drag & drog*/
+.point-item.hovered {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    background-color: #f8f9fa;
+}
+
+/* for drag & drop */
 .dragging {
     opacity: 0.6;
     background-color: #f8f9fa;
@@ -483,6 +489,15 @@ html, body {
 }
 
 #rd-description-edit-btn:hover {
+    transform: scale(1.2);
+}
+
+#rd-points-edit-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#rd-points-edit-btn:hover {
     transform: scale(1.2);
 }
 

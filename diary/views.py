@@ -173,12 +173,17 @@ def profile(request):
 
 @login_required
 def my_places(request):
-    # If exist -> created = True, if not -> created = False
-    route, created = Route.objects.get_or_create(
-        user=request.user,
-        isDraft=True,
-        defaults={'name': 'New Route', 'created_at': timezone.now()}
-    )
+    route_id = request.GET.get('route_id')
+
+    if route_id:
+        route = get_object_or_404(Route, id=route_id, user=request.user)
+    else:
+        route, created = Route.objects.get_or_create(
+            user=request.user,
+            isDraft=True,
+            defaults={'name': 'New Route', 'created_at': timezone.now()}
+        )
+
     places = []
 
     # get route's places
@@ -230,17 +235,12 @@ def delete_point_from_route(request, point_id):
             route = place.route
             place.delete()
 
-            if not Place.objects.filter(route=route).exists():
-                # reset order
-                Place.objects.filter(route=route).update(order=F('order') - F('order') + 1)
-            else:
+            if Place.objects.filter(route=route).exists():
                 # renew place's order
                 points = Place.objects.filter(route=route).order_by('order')
                 for index, point in enumerate(points, start=1):
                     point.order = index
                     point.save()
-
-                route = Route.objects.filter(user=request.user, isDraft=True).first()
 
                 for place in Place.objects.filter(route=route).order_by('order'):
                     place_data = model_to_dict(place)
@@ -263,39 +263,40 @@ def add_point_to_route(request):
         user = request.user
         category_id = int(data.get('placeCategoryId')) if data.get('placeCategoryId') else None
         dt = timezone.make_aware(datetime.strptime(data.get('placeDt'), "%Y-%m-%dT%H:%M"))
+        route_id = data.get('route_id')
 
-        # Add Route
-        # If exist -> created = True, if not -> created = False
-        route, created = Route.objects.get_or_create(
-            user=user,
-            isDraft=True,
-            defaults={'name': 'New Route', 'created_at': timezone.now()}
-        )
+        if not route_id or not name:
+            return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
 
-        # Add New Point
-        place = Place.objects.create(
-            route=route,
-            user=user,
-            name=data.get('placeName', 'New Point'),
-            latitude=float(data.get('placeLatitude')) if data.get('placeLatitude') else None,
-            longitude=float(data.get('placeLongitude')) if data.get('placeLongitude') else None,
-            #altitude=float(data.get('placeAltitude')) if data.get('placeAltitude') else None,
-            country=data.get('placeCountryName'),
-            countryISO=data.get('placeCountryISO'),
-            city=data.get('placeCityName'),
-            dt=dt,
-            description=data.get('placeDescription'),
-            isVisited=data.get('placeIsVisited') == "on" if data.get('placeIsVisited') else False,
-            price=float(data.get('placePrice')) if data.get('placePrice') else 0,
-            category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None,
-            address=data.get('placeAddress')
-        )
+        try:
+            route = Route.objects.get(id=route_id)
 
-        place_info = model_to_dict(place)
-        place_info["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
+            # Add New Point
+            place = Place.objects.create(
+                route=route,
+                user=user,
+                name=data.get('placeName', 'New Point'),
+                latitude=float(data.get('placeLatitude')) if data.get('placeLatitude') else None,
+                longitude=float(data.get('placeLongitude')) if data.get('placeLongitude') else None,
+                #altitude=float(data.get('placeAltitude')) if data.get('placeAltitude') else None,
+                country=data.get('placeCountryName'),
+                countryISO=data.get('placeCountryISO'),
+                city=data.get('placeCityName'),
+                dt=dt,
+                description=data.get('placeDescription'),
+                isVisited=data.get('placeIsVisited') == "on" if data.get('placeIsVisited') else False,
+                price=float(data.get('placePrice')) if data.get('placePrice') else 0,
+                category=MarkerSubCategory.objects.get(pk=category_id) if data.get('placeCategoryId') else None,
+                address=data.get('placeAddress')
+            )
 
-        # Return new Point for update route-main-block
-        return JsonResponse({'success': True, 'place_info': place_info, 'route_info': model_to_dict(route)})
+            place_info = model_to_dict(place)
+            place_info["icon"] = MarkerSubCategory.objects.get(id=place.category_id).emoji if place.category_id else ""
+
+            # Return new Point for update route-main-block
+            return JsonResponse({'success': True, 'place_info': place_info, 'route_info': model_to_dict(route)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 
@@ -335,8 +336,6 @@ def update_point(request, point_id):
             place.price = request.POST.get('placePrice') if request.POST.get('placePrice') else 0
             place.save()
 
-            print(f'place.price={place.price}')
-
             return JsonResponse({'success': True, 'place': {'id': place.id, 'name': place.name, 'isVisited': place.isVisited, 'order': place.order, 'price': place.price}})
         except Place.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Place not found'})
@@ -349,6 +348,7 @@ def update_point_order(request):
         try:
             # get data
             data = json.loads(request.body)
+            route_id = data.get('route_id')
             point_order = data.get('order', [])
 
             # Map point IDs to new orders
@@ -358,7 +358,11 @@ def update_point_order(request):
             for point_id, new_order in order_mapping.items():
                 Place.objects.filter(id=point_id).update(order=new_order)
 
-            route = Route.objects.filter(user=request.user, isDraft=True).first()
+            if not route_id or not new_order:
+                return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
+
+            route = Route.objects.get(id=route_id)
+
             places = []
             for place in Place.objects.filter(route=route).order_by('order'):
                 place_data = model_to_dict(place)
@@ -396,7 +400,7 @@ def save_route(request):
             route.duration = float(duration) if duration else 0
             route.price = float(price) if price else 0
             route.isDraft = False
-            route.waypoints = waypoints
+            route.waypoints = json.dumps(waypoints)
             route.save()
 
             return JsonResponse({'success': True, 'message': 'Route saved successfully!'})
@@ -414,7 +418,17 @@ def route_detail(request, route_id):
     tmp_route['form_duration'] = format_duration(route.duration)
     tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
 
-    places = Place.objects.filter(route=route).order_by('order')
+    places = {}
+    # get route's places
+    for place in Place.objects.filter(route=route).order_by('order'):
+        place_data = model_to_dict(place)
+        subcategory = MarkerSubCategory.objects.get(id=place.category_id) if place.category_id else None
+        place_data["icon"] = subcategory.emoji if subcategory else ""
+        place_data["category"] = subcategory.value.capitalize() if subcategory else ""
+        place_data["dt"] = place_data["dt"].isoformat()
+        place_data["isVisited"] = "true" if place_data["isVisited"] else "false"
+
+        places[place.id] = place_data
 
     is_owner = request.user.is_authenticated and route.user == request.user
 
