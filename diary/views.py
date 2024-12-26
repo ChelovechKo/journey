@@ -263,10 +263,10 @@ def add_point_to_route(request):
         user = request.user
         category_id = int(data.get('placeCategoryId')) if data.get('placeCategoryId') else None
         dt = timezone.make_aware(datetime.strptime(data.get('placeDt'), "%Y-%m-%dT%H:%M"))
-        route_id = data.get('route_id')
+        route_id = data.get('routeId')
 
-        if not route_id or not name:
-            return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
+        if not route_id:
+            return JsonResponse({'success': False, 'error': 'Invalid route_id'}, status=400)
 
         try:
             route = Route.objects.get(id=route_id)

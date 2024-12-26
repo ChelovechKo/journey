@@ -1,11 +1,8 @@
 {% extends "diary/layout.html" %}
 
 {% block body %}
-<div class="page-container">
-    <div class="px-3 py-1">
-        <h2>New Route</h2>
-        <hr>
-    </div>
+
+    <h2 id="page-header" class="d-flex align-items-center position-relative">{{ route.name }}</h2>
 
     <!-- Map and Legend -->
     <div class="route-map-legend row g-0">
@@ -233,6 +230,6 @@
      </div>
 
     <script type="application/json" id="categories-data"> {{ categories_data|safe }} </script>
-</div>
+
 
 {% endblock %}

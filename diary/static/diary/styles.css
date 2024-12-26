@@ -153,6 +153,14 @@ html, body {
     min-height: 100vh;
 }
 
+h2 {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+}
+
 /* Map and Legend */
 /* Common block */
 .route-map-legend{
@@ -518,4 +526,11 @@ html, body {
 #rd-message {
     transition: opacity 0.5s ease-in-out;
     opacity: 1;
+}
+
+#message-block {
+    transition: opacity 0.5s ease, height 0.5s ease;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
 }

@@ -90,9 +90,14 @@
                 </div>
             </div>
           </nav>
-        
-        {% block body %}
-        {% endblock %}
+
+        <div class="container-fluid position-relative mt-2">
+            <!-- Flash Messages -->
+            <div id="message-block"></div>
+
+            {% block body %}
+            {% endblock %}
+        </div>
 
         <!-- Bootstrap JS (for mobile menu) -->
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>

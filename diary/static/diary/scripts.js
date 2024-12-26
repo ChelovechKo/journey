@@ -1,7 +1,7 @@
 let editingPlaceId = null;
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
 const toggleButtons = document.querySelectorAll(".btn-toggle");
+const messageBlock = document.getElementById('message-block');
 
 // Collapse SidebarGroup
 function collapseSidebarGroup(button){
@@ -30,21 +30,25 @@ function handleRouteClick(cardElement) {
     }
 }
 
-function showAlert(arg_container, arg_class, arg_message){
-    arg_container.className = arg_class;
-    arg_container.textContent = arg_message;
+function showMessage(arg_class, arg_message){
+    messageBlock.className = `alert alert-${arg_class}`;
+    messageBlock.textContent = arg_message;
 
-    if(arg_class === 'alert alert-success'){
-        setTimeout(() => {
-            arg_container.style.opacity = '0';
-        }, 2000);
+    messageBlock.style.opacity = '1';
+    messageBlock.style.height = 'auto';
+    messageBlock.style.overflow = 'hidden';
 
-        setTimeout(() => {
-            arg_container.className = '';
-            arg_container.textContent = '';
-            arg_container.style.opacity = '';
-        }, 2500);
-    }
+    setTimeout(() => {
+        messageBlock.style.opacity = '0';
+        messageBlock.style.height = '0';
+    }, 2000);
+
+    setTimeout(() => {
+        messageBlock.className = '';
+        messageBlock.textContent = '';
+        messageBlock.style.opacity = '';
+        messageBlock.style.height = '';
+    }, 3000);
 }
 
 // Add and Edit Point on the User's Map
@@ -115,13 +119,17 @@ function myPlaces(){
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Route saved successfully!');
+                showMessage('success', 'Route saved successfully!');
                 window.location.href = `/route/${routeId}/`; // Redirect to created route
             } else {
-                alert('Error saving route: ' + data.error);
+                console.error('Error saving route (saveRouteButtonClick): ', data.error);
+                showMessage('danger', 'An error occurred while saving the route.');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error saving route (saveRouteButtonClick):', error);
+            showMessage('danger', 'An error occurred while saving the route.');
+        });
     }
 
     // Get Direction
@@ -139,7 +147,7 @@ function myPlaces(){
         }));
 
         if (points.length < 2) {
-            alert("Please add at least two points to build a route.");
+            showMessage('info', 'Please add at least two points to build a route.');
             return;
         }
 
@@ -293,10 +301,14 @@ function myPlaces(){
                 // Renew order on the card
                 updatePointOrderAfterChange(data.places);
             } else {
-                alert('Error deleting point: ' + data.error);
+                console.error('Error deleting point (deletePointFromRoute): ', data.error);
+                showMessage('danger', 'An error occurred while deleting the point.');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error deleting point (deletePointFromRoute):', error);
+            showMessage('danger', 'An error occurred while deleting the point.');
+        });
     }
 
     // Click on user's marker = click on the place's card
@@ -334,10 +346,14 @@ function myPlaces(){
                     if (data.success) {
                         displayPlaceInfo(data.place, false);
                     } else {
-                        alert('Failed to load point data');
+                        console.error('Failed to load point data (handlePointClick): ', data.error);
+                        showMessage('danger', 'An error occurred while loading point data.');
                     }
                 })
-                .catch(error => console.error('Error loading point:', error));
+                .catch(error => {
+                    console.error('Failed to load point data (handlePointClick):', error);
+                    showMessage('danger', 'An error occurred while loading point data.');
+                });
         }
     }
 
@@ -410,17 +426,21 @@ function myPlaces(){
                                 marker.setIcon(markerIcon);
                             }
                         } else {
-                            alert('Error updating point');
+                            console.error('Error updating point (submitPlaceForm): ', data.error);
+                            showMessage('danger', 'An error occurred while updating point.');
                         }
                     })
-                    .catch(error => console.error('Error updating point:', error));
+                    .catch(error => {
+                        console.error('Error updating point (submitPlaceForm):', error);
+                        showMessage('danger', 'An error occurred while updating point.');
+                    });
         }
         else {
             fetch('/add_point_to_route/', {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    'X-CSRFToken': csrfToken
                 },
             })
                 .then(response => response.json())
@@ -498,10 +518,14 @@ function myPlaces(){
                         // Clean the form
                         cleanPlaceForm(placeForm);
                     } else {
-                        alert('Error adding point: ' + data.error);
+                        console.error('Error adding point (submitPlaceForm): ', data.error);
+                        showMessage('danger', 'An error occurred while adding point.');
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error adding point (submitPlaceForm):', error);
+                    showMessage('danger', 'An error occurred while adding point.');
+                });
         }
     }
 
@@ -929,10 +953,14 @@ function myPlaces(){
                         // Renew order on the card
                         updatePointOrderAfterChange(data.places);
                     } else {
-                        alert('Error updating order: ' + data.error);
+                        console.error('Error updating point order (update_point_order): ', data.error);
+                        showMessage('danger', 'An error occurred while updating point order.');
                     }
                 })
-                .catch(error => console.error('Error updating order:', error));
+                .catch(error => {
+                    console.error('Error updating point order (update_point_order):', error);
+                    showMessage('danger', 'An error occurred while updating point order.');
+                });
             }
         });
 
@@ -1072,7 +1100,6 @@ function routeDetailsPage(){
     const rdRating = parseInt(routeInfo.getAttribute('rd-rating')) || 0;
     const rdDifficulty = parseInt(routeInfo.getAttribute('rd-difficulty')) || 0;
 
-    const rdMessage = document.getElementById('rd-message');
     const rdNameDisplay = document.getElementById('rd-name-display');
     const rdNameInput = document.getElementById('rd-name-input');
     const rdStatusToogleButton = document.getElementById('rd-status-toggle-btn');
@@ -1108,16 +1135,16 @@ function routeDetailsPage(){
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showAlert(rdMessage, 'alert alert-success', 'Route deleted successfully!');
+                showMessage('success', 'Route deleted successfully!');
                 window.location.href = '/routes/my_routes/'; // Redirect to routes list
             } else {
-                console.error('Error: ', data.error);
-                showAlert(rdMessage, 'alert alert-danger', 'An error occurred while deleting the route.');
+                console.error('Error deleting route (click_confirmDeleteButton): ', data.error);
+                showMessage('danger', 'An error occurred while deleting the route.');
             }
         })
         .catch(error => {
-            console.error('Error deleting route:', error);
-            showAlert(rdMessage, 'alert alert-danger', 'An error occurred while deleting the route.');
+            console.error('Error deleting route (click_confirmDeleteButton):', error);
+            showMessage('danger', 'An error occurred while deleting the route.');
         });
     }
 
@@ -1149,15 +1176,15 @@ function routeDetailsPage(){
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showAlert(rdMessage, 'alert alert-success', 'Route saved successfully!');
+                showMessage('success', 'Route saved successfully!');
             }else {
-                console.error('Error:', data.error);
-                showAlert(rdMessage, 'alert alert-danger', 'An error occurred while saving the route.');
+                console.error('Error saving route (click_rdApplyRouteChangesButton):', data.error);
+                showMessage('danger', 'An error occurred while saving the route.');
             }
         })
         .catch(error => {
-            console.error('Error saving route:', error);
-            showAlert(rdMessage, 'alert alert-danger', 'An error occurred while saving the route.');
+            console.error('Error saving route (click_rdApplyRouteChangesButton):', error);
+            showMessage('danger', 'An error occurred while saving the route.');
         });
     }
 
@@ -1458,7 +1485,6 @@ function routeDetailsPage(){
 function routes(){
     const deleteButtons = document.querySelectorAll('.routes-delete-route-btn');
     const confirmDeleteButton = document.getElementById('confirmDeleteRoute');
-    const routeMessage = document.getElementById('route-message');
     let selectedRouteId = null;
 
     deleteButtons.forEach(button => {
@@ -1482,15 +1508,15 @@ function routes(){
                     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
                     modal.hide();
                     document.querySelector(`[data-route-id="${selectedRouteId}"]`).closest('.col-md-4').remove();
-                    showAlert(routeMessage, 'alert alert-success', 'Route deleted successfully!');
+                    showMessage('success', 'Route deleted successfully!');
                 } else {
-                    console.error('Error: ', data.error);
-                    showAlert(routeMessage, 'alert alert-danger', 'An error occurred while deleting the route.');
+                    console.error('Error deleting route: ', data.error);
+                    showMessage('danger', 'An error occurred while deleting the route.');
                 }
             })
             .catch(error => {
                 console.error('Error deleting route:', error);
-                showAlert(routeMessage, 'alert alert-danger', 'An error occurred while deleting the route.');
+                showMessage('danger', 'An error occurred while deleting the route.');
             });
         }
     });

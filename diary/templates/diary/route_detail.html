@@ -1,271 +1,265 @@
 {% extends "diary/layout.html" %}
 
 {% block body %}
-<div class="mx-4 my-3">
-    <div class="container-fluid mt-3 position-relative">
-        <!-- Flash Messages -->
-        <div id="rd-message"></div>
-    
-        <!-- Title with badge -->
-        <h2 id="page-header" class="d-flex align-items-center position-relative">
-            <!-- Icon change Route Completion -->
-            <span class="small me-2"
-                  id="rd-completion-toggle-btn"
-                  data-bs-toggle="tooltip"
-                  data-bs-placement="top"
-                  title="Click to toggle completion">
-                {% if route.isPlan %}⏳{% else %}🎯{% endif %}
-            </span>
 
-            <!-- Route Name -->
-            <span id="rd-name-display">{{ route.name }}</span>
-            <input type="text" id="rd-name-input" class="form-control d-none w-50" value="{{ route.name }}">
-            <span id="rd-name-edit-btn"
-                  class="ms-2 small"
-                  data-bs-toggle="tooltip"
-                  data-bs-placement="top"
-                  title="Edit route name">
-                ✏️
-            </span>
-        
-            <!-- Badge on top-right of the title (Published/Saved) -->
-            <div class="position-absolute top-0 end-0">
-                <button
-                    class="badge border-0 text-white
-                           {% if route.isPublished %} bg-primary
-                           {% elif not route.isDraft %} bg-success
-                           {% endif %}"
-                    id="rd-status-toggle-btn"
-                    {% if is_owner %} 
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Click to toggle status"
-                    {% endif %}>
-                    {% if route.isPublished %}Published{% elif not route.isDraft %}Saved{% endif %}
-                </button>
+    <!-- Title with badge -->
+    <h2 id="page-header" class="d-flex align-items-center position-relative">
+        <!-- Icon change Route Completion -->
+        <span class="small me-2"
+              id="rd-completion-toggle-btn"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="Click to toggle completion">
+            {% if route.isPlan %}⏳{% else %}🎯{% endif %}
+        </span>
+
+        <!-- Route Name -->
+        <span id="rd-name-display">{{ route.name }}</span>
+        <input type="text" id="rd-name-input" class="form-control d-none w-50" value="{{ route.name }}">
+        <span id="rd-name-edit-btn"
+              class="ms-2 small"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="Edit route name">
+            ✏️
+        </span>
+
+        <!-- Badge on top-right of the title (Published/Saved) -->
+        <div class="position-absolute top-0 end-0">
+            <button
+                class="badge border-0 text-white
+                       {% if route.isPublished %} bg-primary
+                       {% elif not route.isDraft %} bg-success
+                       {% endif %}"
+                id="rd-status-toggle-btn"
+                {% if is_owner %}
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Click to toggle status"
+                {% endif %}>
+                {% if route.isPublished %}Published{% elif not route.isDraft %}Saved{% endif %}
+            </button>
+        </div>
+    </h2>
+    <hr>
+
+    <div class="row vh-100">
+        <!-- Points Column (9/12) -->
+        <div class="col-md-9">
+
+            <!-- Date's create -->
+            <div class="d-flex align-items-center">
+                <div>
+                    Created on:
+                    <span class="text-muted small">{{ route.created_at|date:"F j, Y" }}</span>
+                </div>
             </div>
-        </h2>
-        <hr>
 
-        <div class="row vh-100">
-            <!-- Points Column (9/12) -->
-            <div class="col-md-9">
+            <!-- Creator Info -->
+            <div class="mb-4 d-flex align-items-center gap-2">
+                <span>Created by:</span>
+                {% if user_info.avatar %}
+                    <!-- Users's avatar -->
+                    <img src="{{ user_info.avatar.url }}"
+                         alt="{{ user_info.name }}"
+                         class="rounded-circle"
+                         style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;"
+                         data-bs-toggle="tooltip"
+                         data-bs-placement="right"
+                         title="{{ user_info.username }}">
+                {% else %}
+                    <i class="{% if user_info.selected_icon %}{{ user_info.selected_icon }} fa-2x {% else %}fa fa-user-circle fa-2x text-secondary{% endif %}"
+                       style="color: {% if user_info.selected_icon %}{{ user_info.selected_color }}{% endif %}; margin-right: 10px;"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="right"
+                       title="{{ user_info.username }}"></i>
+                {% endif %}
+            </div>
 
-                <!-- Date's create -->
+            <!-- Map Container -->
+            <div class="mb-4">
+                <h3>Route Map</h3>
+                <div id="rd-map-container" style="height: 700px; border: 1px solid #ddd;"></div>
+            </div>
+
+            <!-- Route Description -->
+            <div class="border p-3 rounded" id="rd-description-container">
                 <div class="d-flex align-items-center">
-                    <div>
-                        Created on:
-                        <span class="text-muted small">{{ route.created_at|date:"F j, Y" }}</span>
-                    </div>
+                    <h4>Description</h4>
+                    <span id="rd-description-edit-btn"
+                          class="ms-2"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Edit route's description">
+                        ✏️
+                    </span>
                 </div>
-
-                <!-- Creator Info -->
-                <div class="mb-4 d-flex align-items-center gap-2">
-                    <span>Created by:</span>
-                    {% if user_info.avatar %}
-                        <!-- Users's avatar -->
-                        <img src="{{ user_info.avatar.url }}"
-                             alt="{{ user_info.name }}"
-                             class="rounded-circle"
-                             style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;"
-                             data-bs-toggle="tooltip"
-                             data-bs-placement="right"
-                             title="{{ user_info.username }}">
-                    {% else %}
-                        <i class="{% if user_info.selected_icon %}{{ user_info.selected_icon }} fa-2x {% else %}fa fa-user-circle fa-2x text-secondary{% endif %}"
-                           style="color: {% if user_info.selected_icon %}{{ user_info.selected_color }}{% endif %}; margin-right: 10px;"
-                           data-bs-toggle="tooltip"
-                           data-bs-placement="right"
-                           title="{{ user_info.username }}"></i>
-                    {% endif %}
-                </div>
-
-                <!-- Map Container -->
-                <div class="mb-4">
-                    <h3>Route Map</h3>
-                    <div id="rd-map-container" style="height: 700px; border: 1px solid #ddd;"></div>
-                </div>
-            
-                <!-- Route Description -->
-                <div class="border p-3 rounded" id="rd-description-container">
-                    <div class="d-flex align-items-center">
-                        <h4>Description</h4>
-                        <span id="rd-description-edit-btn"
-                              class="ms-2"
-                              data-bs-toggle="tooltip"
-                              data-bs-placement="top"
-                              title="Edit route's description">
-                            ✏️
-                        </span>
-                    </div>
-                    <textarea id="rd-description" class="form-control mt-2" rows="8" placeholder="Enter route's description here..." readonly>{{ route.description }}</textarea>
-                </div>
-            </div>
-
-            <!-- Info Column (3/12) -->
-            <div class="col-md-3 bg-light p-3 sidebar">
-                <div class="sidebar-group position-relative">
-                    <!-- Title Route Overview -->
-                    <h5 class="group-title">Route Overview</h5>
-                    
-                    <!-- Hidden Button -->
-                    <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
-                    
-                    <!-- Route Overview Section -->
-                    <div class="group-content" id="rd-route-overview-section">
-                        <div class="align-items-start">
-                            <!-- Rating -->
-                            <div class="d-flex align-items-center mb-2">
-                                <span class="me-2 text-muted small">Rating:</span>
-            
-                                <div id="rd-star-rating-btn" class="d-flex">
-                                    <span class="star" data-value="1" title="1 Star" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                                    <span class="star" data-value="2" title="2 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                                    <span class="star" data-value="3" title="3 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                                    <span class="star" data-value="4" title="4 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                                    <span class="star" data-value="5" title="5 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
-                                </div>
-                            </div>
-            
-                            <!-- Distance -->
-                            <div class="d-flex align-items-center gap-1 mb-2">
-                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
-                                <span class="text-muted small text-nowrap">{{ route.form_distance }}</span>
-                            </div>
-            
-                            <!-- Duration -->
-                            <div class="d-flex align-items-center gap-1 mb-2">
-                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration">🕒</span>
-                                <span class="text-muted small text-nowrap">{{ route.form_duration }}</span>
-                            </div>
-            
-                            <!-- Price -->
-                            <div class="d-flex align-items-center gap-1 mb-2">
-                                <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
-                                <span class="text-muted small text-nowrap">{{ route.price }}</span>
-                            </div>
-            
-                            <!-- Start Date -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="bi bi-calendar-event text-dark"
-                                   data-bs-toggle="tooltip"
-                                   data-bs-placement="top"
-                                   title="Start Date"
-                                   style="cursor: pointer;"></i>
-                                <input type="datetime-local" id="rd-start-date-btn" name="start-date"
-                                       class="form-control"
-                                       value="{{ route.start_date|date:'Y-m-d\TH:i' }}">
-                            </div>
-            
-                            <!-- End Date -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="bi bi-calendar-check text-dark"
-                                   data-bs-toggle="tooltip"
-                                   data-bs-placement="top"
-                                   title="End Date"
-                                   style="cursor: pointer;"></i>
-                                <input type="datetime-local" id="rd-end-date-btn" name="end-date"
-                                       class="form-control"
-                                       value="{{ route.end_date|date:'Y-m-d\TH:i' }}">
-                            </div>
-                            
-                            <!-- Difficulty -->
-                            <div class="d-flex align-items-center mb-2">
-                                <span class="me-2 text-muted small">Difficulty:</span>
-            
-                                <div id="rd-difficulty-rating-btn" class="d-flex">
-                                    <span class="boot" data-value="1" title="Easy" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                                    <span class="boot" data-value="2" title="Moderate" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                                    <span class="boot" data-value="3" title="Challenging" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                                    <span class="boot" data-value="4" title="Difficult" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                                    <span class="boot" data-value="5" title="Extreme" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <hr class="w-100">
-                        
-                        <!-- Submit button -->
-                        <div class="d-flex align-items-center justify-content-between mt-2">
-                            <!-- Apply Button  -->
-                            <button id="rd-apply-route-changes-btn" class="btn btn-primary">🗸 Apply changes</button>
-                            <!-- Delete Apply -->
-                            <button id="rd-delete-route-btn" class="btn btn-danger">✕ Delete Route</button>
-                        </div>
-                    </div>
-                </div>
-            
-                <div class="sidebar-group position-relative">
-                    <!-- Title Points -->
-                    <h5 class="group-title d-flex align-items-center justify-content-start">
-                        <span>Points</span>
-                        <span id="rd-points-edit-btn"
-                              class="ms-2"
-                              data-bs-toggle="tooltip"
-                              data-bs-placement="top"
-                              title="Edit route's points">
-                            ✏️
-                        </span>
-                    </h5>
-                    <!-- Hidden Button -->
-                    <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
-                    
-                    <div class="group-content" id="rd-points-section">
-                        <div id="rd-route-points">
-                            {% for place in places.values %}
-                                <div class="point-item card mb-1 shadow-sm"
-                                    rd-point-id="{{ place.id }}">
-                                    <div class="card-body d-flex gap-2 position-relative">
-                                        <!-- Order number badge-->
-                                        <span class="badge bg-info position-absolute top-0 start-0">
-                                            {{ place.order }}
-                                        </span>
-                                        
-                                        <!-- Visited badge-->
-                                        <span class="badge position-absolute bottom-0 end-0"
-                                              data-bs-toggle="tooltip"
-                                              data-bs-placement="top"
-                                              title="{% if place.isVisited %}Visited{% else %}Not Visited{% endif %}">
-                                            {% if place.isVisited %}🎯{% else %}⏳{% endif %}
-                                        </span>
-                                        
-                                        <div class="d-flex flex-column align-items-start p-2">
-                                            <!-- Point's Details -->
-                                            <div class="d-flex">
-                                                <!-- Price -->
-                                                <div class="d-flex align-items-center gap-1">
-                                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
-                                                    <div>{{ place.price }}</div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Categories icon and name -->
-                                            <div class="d-flex">                                                
-                                                <div class="me-2" data-bs-toggle="tooltip" title="{{ place.category }}">
-                                                    <span class="icon-category">{{ place.icon }}</span>
-                                                </div>
-                                                <div>{{ place.name }}</div>
-                                            </div>
-                                            
-                                            <!-- Country + Address -->
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-2" data-bs-toggle="tooltip" title="{{ place.country }}">
-                                                    <span class="flag-icon flag-icon-{{ place.countryISO }}"></span>
-                                                </div>
-                                                <div>{{ place.address }}</div>
-                                            </div>
-                                            
-                                        </div>                                        
-                                    </div>
-                                </div>
-                        {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            
+                <textarea id="rd-description" class="form-control mt-2" rows="8" placeholder="Enter route's description here..." readonly>{{ route.description }}</textarea>
             </div>
         </div>
-    
+
+        <!-- Info Column (3/12) -->
+        <div class="col-md-3 bg-light p-3 sidebar">
+            <div class="sidebar-group position-relative">
+                <!-- Title Route Overview -->
+                <h5 class="group-title">Route Overview</h5>
+
+                <!-- Hidden Button -->
+                <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
+
+                <!-- Route Overview Section -->
+                <div class="group-content" id="rd-route-overview-section">
+                    <div class="align-items-start">
+                        <!-- Rating -->
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="me-2 text-muted small">Rating:</span>
+
+                            <div id="rd-star-rating-btn" class="d-flex">
+                                <span class="star" data-value="1" title="1 Star" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                <span class="star" data-value="2" title="2 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                <span class="star" data-value="3" title="3 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                <span class="star" data-value="4" title="4 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                                <span class="star" data-value="5" title="5 Stars" data-bs-toggle="tooltip" data-bs-placement="top">★</span>
+                            </div>
+                        </div>
+
+                        <!-- Distance -->
+                        <div class="d-flex align-items-center gap-1 mb-2">
+                            <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Distance">📐</span>
+                            <span class="text-muted small text-nowrap">{{ route.form_distance }}</span>
+                        </div>
+
+                        <!-- Duration -->
+                        <div class="d-flex align-items-center gap-1 mb-2">
+                            <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration">🕒</span>
+                            <span class="text-muted small text-nowrap">{{ route.form_duration }}</span>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="d-flex align-items-center gap-1 mb-2">
+                            <span class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
+                            <span class="text-muted small text-nowrap">{{ route.price }}</span>
+                        </div>
+
+                        <!-- Start Date -->
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-calendar-event text-dark"
+                               data-bs-toggle="tooltip"
+                               data-bs-placement="top"
+                               title="Start Date"
+                               style="cursor: pointer;"></i>
+                            <input type="datetime-local" id="rd-start-date-btn" name="start-date"
+                                   class="form-control"
+                                   value="{{ route.start_date|date:'Y-m-d\TH:i' }}">
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-calendar-check text-dark"
+                               data-bs-toggle="tooltip"
+                               data-bs-placement="top"
+                               title="End Date"
+                               style="cursor: pointer;"></i>
+                            <input type="datetime-local" id="rd-end-date-btn" name="end-date"
+                                   class="form-control"
+                                   value="{{ route.end_date|date:'Y-m-d\TH:i' }}">
+                        </div>
+
+                        <!-- Difficulty -->
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="me-2 text-muted small">Difficulty:</span>
+
+                            <div id="rd-difficulty-rating-btn" class="d-flex">
+                                <span class="boot" data-value="1" title="Easy" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                <span class="boot" data-value="2" title="Moderate" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                <span class="boot" data-value="3" title="Challenging" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                <span class="boot" data-value="4" title="Difficult" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                                <span class="boot" data-value="5" title="Extreme" data-bs-toggle="tooltip" data-bs-placement="top">🥾</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="w-100">
+
+                    <!-- Submit button -->
+                    <div class="d-flex align-items-center justify-content-between mt-2">
+                        <!-- Apply Button  -->
+                        <button id="rd-apply-route-changes-btn" class="btn btn-primary">🗸 Apply changes</button>
+                        <!-- Delete Apply -->
+                        <button id="rd-delete-route-btn" class="btn btn-danger">✕ Delete Route</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-group position-relative">
+                <!-- Title Points -->
+                <h5 class="group-title d-flex align-items-center justify-content-start">
+                    <span>Points</span>
+                    <span id="rd-points-edit-btn"
+                          class="ms-2"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Edit route's points">
+                        ✏️
+                    </span>
+                </h5>
+                <!-- Hidden Button -->
+                <button type="button" class="btn btn-toggle" aria-label="Toggle">&minus;</button>
+
+                <div class="group-content" id="rd-points-section">
+                    <div id="rd-route-points">
+                        {% for place in places.values %}
+                            <div class="point-item card mb-1 shadow-sm"
+                                rd-point-id="{{ place.id }}">
+                                <div class="card-body d-flex gap-2 position-relative">
+                                    <!-- Order number badge-->
+                                    <span class="badge bg-info position-absolute top-0 start-0">
+                                        {{ place.order }}
+                                    </span>
+
+                                    <!-- Visited badge-->
+                                    <span class="badge position-absolute bottom-0 end-0"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="{% if place.isVisited %}Visited{% else %}Not Visited{% endif %}">
+                                        {% if place.isVisited %}🎯{% else %}⏳{% endif %}
+                                    </span>
+
+                                    <div class="d-flex flex-column align-items-start p-2">
+                                        <!-- Point's Details -->
+                                        <div class="d-flex">
+                                            <!-- Price -->
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
+                                                <div>{{ place.price }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Categories icon and name -->
+                                        <div class="d-flex">
+                                            <div class="me-2" data-bs-toggle="tooltip" title="{{ place.category }}">
+                                                <span class="icon-category">{{ place.icon }}</span>
+                                            </div>
+                                            <div>{{ place.name }}</div>
+                                        </div>
+
+                                        <!-- Country + Address -->
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2" data-bs-toggle="tooltip" title="{{ place.country }}">
+                                                <span class="flag-icon flag-icon-{{ place.countryISO }}"></span>
+                                            </div>
+                                            <div>{{ place.address }}</div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <div class="modal fade" id="deleteRouteModal" tabindex="-1" aria-labelledby="deleteRouteModalLabel" aria-hidden="true">
@@ -288,13 +282,11 @@
 
     <!-- info for JS -->
     <div id="routeJSinfo"
-         rd-is-owner="{{ is_owner|lower }}" 
+         rd-is-owner="{{ is_owner|lower }}"
          rd-route-id="{{ route.id }}"
          rd-rating="{{ route.rating }}"
          rd-difficulty="{{ route.difficulty }}">
     </div>
     <script>let rdWaypoints = {{ places|safe }};</script>
-</div>
-
 
 {% endblock %}
