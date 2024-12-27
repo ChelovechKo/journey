@@ -185,9 +185,8 @@ h2 {
     border: 1px solid #ccc;
     padding: 10px;
     background-color: #f9f9f9;
-    overflow-y: auto;
+    overflow-y: hidden;
     box-sizing: border-box;
-    min-height: 100vh;
 }
 
 /* Groups in Legend */
@@ -300,15 +299,6 @@ h2 {
 }
 
 /*Map Legend animation*/
-.legend {
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-    transform: translateX(0);
-}
-
-.legend.hidden {
-    transform: translateX(100%);
-}
-
 #legend-toggle-btn {
     top: 10px;
     right: 10px;

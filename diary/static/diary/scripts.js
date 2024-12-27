@@ -833,7 +833,7 @@ function myPlaces(){
 
         if (isLegendVisible) {
             // Hide Legend
-            mapLegend.classList.add('hidden');
+            mapLegend.style.display = "none";
             LegendToggleBtn.querySelector('i').classList.replace('fa-chevron-right', 'fa-chevron-left');
             mapContainer.classList.replace('col-md-7', 'col-md-9');
 
@@ -845,7 +845,7 @@ function myPlaces(){
             }
         } else {
             // Show Legend
-            mapLegend.classList.remove('hidden');
+            mapLegend.style.display = "block";
             LegendToggleBtn.querySelector('i').classList.replace('fa-chevron-left', 'fa-chevron-right');
             mapContainer.classList.replace('col-md-9', 'col-md-7');
 
