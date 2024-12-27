@@ -160,6 +160,7 @@ def profile(request):
                 return render(request, "diary/profile.html", {"user": user})
             else:
                 user.set_password(new_password)
+                user.save()
                 update_session_auth_hash(request, user) # renew user's session
                 messages.success(request, "Password updated successfully.")
 
