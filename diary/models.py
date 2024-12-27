@@ -65,6 +65,7 @@ class Route(models.Model):
     isPlan = models.BooleanField(default=True)  # True - is in Plan, False - is Finished
     isDraft = models.BooleanField(default=False)  # True - is Draft, False - is Done
     isPublished = models.BooleanField(default=False)  # True - is Published, False - is not
+    likes_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.id}-{self.name}"
@@ -102,3 +103,16 @@ class Place(models.Model):
 
     class Meta:
         ordering = ['route_id', 'order'] # sorting
+
+
+class Like(models.Model):
+    """Model for user likes on routes"""
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="likes")
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="likes")
+
+    class Meta:
+        unique_together = ('user', 'route')  # Ensures a user can like a route only once
+
+    def __str__(self):
+        return f"Like(id={self.id}, user={self.user}, route={self.route})"

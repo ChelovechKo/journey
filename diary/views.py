@@ -14,7 +14,7 @@ from datetime import datetime
 import json
 import requests
 
-from .models import User, Place, MarkerSubCategory, MarkerCategory, Route
+from .models import User, Place, MarkerSubCategory, MarkerCategory, Route, Like
 
 def format_distance(distance):
     if not distance:
@@ -417,6 +417,7 @@ def route_detail(request, route_id):
     tmp_route['form_distance'] = format_distance(route.distance)
     tmp_route['form_duration'] = format_duration(route.duration)
     tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
+    tmp_route['liked_by_current_user'] = request.user.is_authenticated and route.likes.filter(user=request.user).exists()
 
     places = {}
     # get route's places
@@ -501,9 +502,37 @@ def routes_view(request, view_type):
         tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
         tmp_route['user'] = model_to_dict(User.objects.get(id=route.user.id))
         tmp_route['is_owner'] = request.user.is_authenticated and route.user.id == request.user.id
+        tmp_route['liked_by_current_user'] = request.user.is_authenticated and route.likes.filter(user=request.user).exists()
         processed_routes.append(tmp_route)
+
+    is_owner = request.user.is_authenticated and route.user == request.user
 
     return render(request, 'diary/routes.html', {
         'routes': processed_routes,
         'title': title,
+        'is_owner': is_owner
+    })
+
+@login_required
+def toggle_like(request, route_id):
+    """ like/unlike for a route"""
+    route = Route.objects.get(id=route_id)
+    user = request.user
+    liked = False
+
+    like, created = Like.objects.get_or_create(user=user, route=route)
+
+    if not created:
+        like.delete() # If the like already exists, remove it (unlike)
+        liked = False
+    else:
+        liked = True # Otherwise, the user has liked the post
+
+    # Update the like count on the post
+    route.likes_count = route.likes.count()
+    route.save()
+
+    return JsonResponse({
+        'liked': liked,
+        'likes_count': route.likes_count
     })

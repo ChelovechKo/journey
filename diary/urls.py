@@ -23,6 +23,7 @@ urlpatterns = [
     path('routes/<str:view_type>/', views.routes_view, name='routes_view'),
     path('apply_route_changes/', views.apply_route_changes, name='apply_route_changes'),
     path('delete_route/<int:route_id>/', views.delete_route, name='delete_route'),
+    path("toggle_like/<int:route_id>/", views.toggle_like, name="toggle_like"),
 ]
 
 if settings.DEBUG:

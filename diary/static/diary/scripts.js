@@ -1147,11 +1147,50 @@ function routeDetailsPage(){
     const rdStarsRatingButton = document.getElementById('rd-star-rating-btn');
     const rdBootsDifficultyButton = document.getElementById('rd-difficulty-rating-btn');
     const rdPointsEditButton = document.getElementById('rd-points-edit-btn');
+    const rdLikeButton = document.getElementById('rd-like-route-btn');
 
     const confirmDeleteButton = document.getElementById('confirmDeleteRoute');
 
     const stars = document.querySelectorAll('#rd-star-rating-btn .star');
     const boots = document.querySelectorAll('#rd-difficulty-rating-btn .boot');
+
+    function click_rdLikeButton(){
+        const icon = this.querySelector('.icon-heart');
+        const likeCountSpan = this.querySelector('small');
+
+        // Send request to toggle like
+        fetch(`/toggle_like/${routeId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error toggling like on route (click_rdLikeButton): ', data.error);
+                    showMessage('danger', 'An error occurred while toggling like on route.');
+                    return;
+                }
+
+                // Update icon based on the new liked state
+                if (data.liked) {
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill');
+                } else {
+                    icon.classList.remove('bi-heart-fill');
+                    icon.classList.add('bi-heart');
+                }
+
+                // Update like count
+                likeCountSpan.textContent = `${data.likes_count}`;
+            })
+            .catch(error => {
+                console.error('Error toggling like on route (click_rdLikeButton): ', error);
+                showMessage('danger', 'An error occurred while toggling like on route.');
+            });
+    }
 
     function click_rdDeleteRouteButton(){
         const deleteRouteModal = new bootstrap.Modal(document.getElementById('deleteRouteModal'));
@@ -1472,7 +1511,6 @@ function routeDetailsPage(){
         rdStarsRatingButton.classList.remove('no-interaction');
         rdBootsDifficultyButton.classList.remove('no-interaction');
 
-        rdStatusToogleButton.style.display = 'block';
         rdCompletionToogleButton.style.display = 'block';
         rdNameEditButton.style.display = 'block';
         rdStartDateButton.disabled = false;
@@ -1498,7 +1536,6 @@ function routeDetailsPage(){
     else {
         rdStarsRatingButton.classList.add('no-interaction');
         rdBootsDifficultyButton.classList.add('no-interaction');
-        rdStatusToogleButton.style.display = 'none';
         rdCompletionToogleButton.style.display = 'none';
         rdNameEditButton.style.display = 'none';
         rdStartDateButton.disabled = true;
@@ -1508,6 +1545,7 @@ function routeDetailsPage(){
         rdDeleteRouteButton.style.display = 'none';
         confirmDeleteButton.style.display = 'none';
         rdPointsEditButton.style.display = 'none';
+        rdLikeButton.addEventListener('click', click_rdLikeButton);
     }
 
     rdRoutePoints.addEventListener('mouseover', mouse_over_rdPoint);
@@ -1516,42 +1554,49 @@ function routeDetailsPage(){
 
 // Routes Cards
 function routes(){
-    const deleteButtons = document.querySelectorAll('.routes-delete-route-btn');
-    const confirmDeleteButton = document.getElementById('confirmDeleteRoute');
-    let selectedRouteId = null;
+    const routeLikeButtons = document.querySelectorAll('.routes-like-route-btn');
 
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            selectedRouteId = this.getAttribute('data-route-id');
-        });
-    });
+    routeLikeButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.stopPropagation(); // Prevent event bubbling to parent elements
 
-    confirmDeleteButton.addEventListener('click', function () {
-        if (selectedRouteId) {
-            fetch(`/delete_route/${selectedRouteId}/`, {
-                method: 'DELETE',
+            const selectedRouteId = this.getAttribute('data-route-id');
+            const icon = this.querySelector('.icon-heart');
+            const likeCountSpan = this.querySelector('small');
+
+            // Send request to toggle like
+            fetch(`/toggle_like/${selectedRouteId}/`, {
+                method: 'POST',
                 headers: {
-                    'X-CSRFToken': csrfToken
-                }
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Close the modal and remove the route card
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
-                    modal.hide();
-                    document.querySelector(`[data-route-id="${selectedRouteId}"]`).closest('.col-md-4').remove();
-                    showMessage('success', 'Route deleted successfully!');
-                } else {
-                    console.error('Error deleting route: ', data.error);
-                    showMessage('danger', 'An error occurred while deleting the route.');
-                }
-            })
-            .catch(error => {
-                console.error('Error deleting route:', error);
-                showMessage('danger', 'An error occurred while deleting the route.');
-            });
-        }
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error toggling like on route (routeLikeButtons): ', data.error);
+                        showMessage('danger', 'An error occurred while toggling like on route.');
+                        return;
+                    }
+
+                    // Update icon based on the new liked state
+                    if (data.liked) {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    } else {
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                    }
+
+                    // Update like count
+                    likeCountSpan.textContent = `${data.likes_count}`;
+                })
+                .catch(error => {
+                    console.error('Error toggling like on route (routeLikeButtons): ', error);
+                    showMessage('danger', 'An error occurred while toggling like on route.');
+                });
+        });
     });
 }
 

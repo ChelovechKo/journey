@@ -25,21 +25,29 @@
         </span>
 
         <!-- Badge on top-right of the title (Published/Saved) -->
-        <div class="position-absolute top-0 end-0">
-            <button
-                class="badge border-0 text-white
-                       {% if route.isPublished %} bg-primary
-                       {% elif not route.isDraft %} bg-success
-                       {% endif %}"
-                id="rd-status-toggle-btn"
-                {% if is_owner %}
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    title="Click to toggle status"
-                {% endif %}>
-                {% if route.isPublished %}Published{% elif not route.isDraft %}Saved{% endif %}
-            </button>
-        </div>
+    
+        {% if is_owner %}
+            <div class="position-absolute top-0 end-0">
+                <button
+                    class="badge border-0 text-white
+                           {% if route.isPublished %} bg-primary
+                           {% elif not route.isDraft %} bg-success
+                           {% endif %}"
+                    id="rd-status-toggle-btn"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Click to toggle status">
+                    
+                    {% if route.isPublished %}Published{% elif not route.isDraft %}Saved{% endif %}
+                </button>
+            </div>
+        {% else %}
+            <div class="position-absolute top-0 end-0" id = "rd-like-route-btn">
+                <i class="bi {% if route.liked_by_current_user %}bi-heart-fill{% else %} bi-heart {% endif %} icon-heart"></i>
+                <small class="text-muted">{{ route.likes_count }}</small>
+            </div>
+        {% endif %}
+        
     </h2>
 
     <div class="row vh-100">

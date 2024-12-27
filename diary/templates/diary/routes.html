@@ -4,7 +4,7 @@
         <div class="container-lg mt-3">
             <!-- Flash Messages -->
             <div id="route-message"></div>
-        
+
             <h2>{{ title }}</h2>
             <hr>
 
@@ -15,26 +15,22 @@
                              data-route-id="{{ route.id }}"
                              data-is-draft="{{ route.isDraft }}"
                              onclick="handleRouteClick(this);">
+
                             <!-- Route's status top-left badge -->
                             <span class="badge position-absolute top-0 start-0 m-2
                                 {% if route.isDraft %} bg-secondary {% elif route.isPublished %} bg-primary {% else %} bg-success{% endif %}">
                                 {% if route.isDraft %}Draft{% elif route.isPublished %}Published{% else %}Saved{% endif %}
                             </span>
-                        
-                            <!-- Route's top-right trash badge -->
-                            {% if route.is_owner %}
-                                <button type="button" 
-                                        class="btn btn-link text-danger position-absolute top-0 end-0 routes-delete-route-btn" 
-                                        data-route-id="{{ route.id }}"
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#confirmDeleteModal"
-                                        data-bs-placement="top" 
-                                        title="Delete Route"
-                                        onclick="event.stopPropagation();">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+
+                            <!-- Route's bottom-left like badge -->
+                            {% if not is_owner%}
+                                <div class="position-absolute bottom-0 start-0 m-2 routes-like-route-btn"
+                                        data-route-id="{{ route.id }}">
+                                    <i class="bi {% if route.liked_by_current_user %}bi-heart-fill{% else %} bi-heart {% endif %} icon-heart"></i>
+                                    <small class="text-muted">{{ route.likes_count }}</small>
+                                </div>
                             {% endif %}
-                        
+
                             <div class="card-body mt-4">
                                 <!-- Route's Title -->
                                 <h5 class="card-title d-flex align-items-center">
@@ -115,7 +111,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Confirmation Modal -->
     <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
