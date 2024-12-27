@@ -43,7 +43,7 @@
             </div>
         {% else %}
             <div class="position-absolute top-0 end-0">
-                <i id = "rd-like-route-btn"
+                <i id="rd-like-route-btn"
                    class="bi {% if route.liked_by_current_user %}bi-heart-fill{% else %} bi-heart {% endif %} icon-heart"
                    data-bs-toggle="tooltip"
                    data-bs-placement="top"
@@ -51,12 +51,14 @@
                 </i>
                 <small class="text-muted" id="rd-likes-cnt">{{ route.likes_count }}</small>
 
-                <i id = "rd-bookmark-route-btn"
-                   class="bi {% if route.bookmarked_by_current_user %}bi-bookmark-fill{% else %} bi-bookmark {% endif %} icon-bookmark"
-                   data-bs-toggle="tooltip"
-                   data-bs-placement="top"
-                   title="Bookmark">
-                </i>
+                {% if user.is_authenticated %}
+                    <i id = "rd-bookmark-route-btn"
+                       class="bi {% if route.bookmarked_by_current_user %}bi-bookmark-fill{% else %} bi-bookmark {% endif %} icon-bookmark"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="top"
+                       title="Bookmark">
+                    </i>
+                {% endif %}
             </div>
         {% endif %}
 
@@ -306,6 +308,7 @@
          rd-rating="{{ route.rating }}"
          rd-difficulty="{{ route.difficulty }}">
     </div>
+    <div id="is-authenticated" data-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"></div>
     <script>let rdWaypoints = {{ places|safe }};</script>
 
 {% endblock %}

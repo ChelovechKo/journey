@@ -55,6 +55,7 @@ function showMessage(arg_class, arg_message){
 // Add and Edit Point on the User's Map
 function myPlaces(){
     const map = L.map("map").setView([51.505, -0.09], 2);  // Init Map
+    const bounds = L.latLngBounds(L.latLng(-85.05112878, -180), L.latLng(85.05112878, 180)); // bounds for map
     const routeDetailsDiv = document.getElementById("route-details");
     const markers = [];
     const categoryIcons = {};
@@ -861,9 +862,11 @@ function myPlaces(){
         }, 300);
     }
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+
+    map.setMaxBounds(bounds);
+    map.options.minZoom = 2;
+    map.options.maxBoundsViscosity = 1.0;
 
     // Fill categoryIcons
     categoriesData.forEach(category => {
@@ -1125,6 +1128,7 @@ function routeDetailsPage(){
     let selectedRating = 0;
     let selectedDifficulty = 0;
 
+    const isAuthenticated = document.getElementById('is-authenticated').dataset.authenticated === 'true';
     const rdRoutePoints = document.getElementById('rd-route-points');
 
     const routeInfo = document.getElementById('routeJSinfo');
@@ -1156,6 +1160,11 @@ function routeDetailsPage(){
     const boots = document.querySelectorAll('#rd-difficulty-rating-btn .boot');
 
     function click_rdLikeButton(){
+        if (!isAuthenticated) {
+            showMessage('warning', 'You need to log in to like routes.');
+            return;
+        }
+
         const rdLikesCnt = document.getElementById('rd-likes-cnt');
 
         // Send request to toggle like
@@ -1191,6 +1200,11 @@ function routeDetailsPage(){
     }
 
     function click_rdBookmarkButton(){
+        if (!isAuthenticated) {
+            showMessage('warning', 'You need to log in to bookmark routes.');
+            return;
+        }
+
         // Send request to toggle like
         fetch(`/toggle_bookmark/${routeId}/`, {
             method: 'POST',
@@ -1464,7 +1478,11 @@ function routeDetailsPage(){
 
         // map init
         const map = L.map('rd-map-container').setView([rdWaypointsArray[0].latitude, rdWaypointsArray[0].longitude], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        const bounds = L.latLngBounds(L.latLng(-85.05112878, -180), L.latLng(85.05112878, 180));
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+        map.setMaxBounds(bounds);
+        map.options.minZoom = 2;
+        map.options.maxBoundsViscosity = 1.0;
 
         // restore route
         const routeControl = L.Routing.control({
@@ -1572,8 +1590,10 @@ function routeDetailsPage(){
         rdDeleteRouteButton.style.display = 'none';
         confirmDeleteButton.style.display = 'none';
         rdPointsEditButton.style.display = 'none';
-        rdLikeButton.addEventListener('click', click_rdLikeButton);
-        rdBookmarkButton.addEventListener('click', click_rdBookmarkButton);
+        if (isAuthenticated) {
+            rdLikeButton.addEventListener('click', click_rdLikeButton);
+            rdBookmarkButton.addEventListener('click', click_rdBookmarkButton);
+        }
     }
 
     rdRoutePoints.addEventListener('mouseover', mouse_over_rdPoint);
@@ -1582,12 +1602,19 @@ function routeDetailsPage(){
 
 // Routes Cards
 function routes(){
+    const isAuthenticated = document.getElementById('is-authenticated').dataset.authenticated === 'true';
+
     const routeLikeButtons = document.querySelectorAll('.routes-like-route-btn');
     const routeBookmarkButtons = document.querySelectorAll('.routes-bookmark-route-btn');
 
     routeLikeButtons.forEach(button => {
         button.addEventListener('click', function (e) {
             e.stopPropagation(); // Prevent event bubbling to parent elements
+
+            if (!isAuthenticated) {
+                showMessage('warning', 'You need to log in to like routes.');
+                return;
+            }
 
             const selectedRouteId = this.getAttribute('data-route-id');
             const icon = this.querySelector('.icon-heart');
@@ -1629,6 +1656,11 @@ function routes(){
     routeBookmarkButtons.forEach(button => {
         button.addEventListener('click', function (e) {
             e.stopPropagation(); // Prevent event bubbling to parent elements
+
+            if (!isAuthenticated) {
+                showMessage('warning', 'You need to log in to bookmark routes.');
+                return;
+            }
 
             const selectedRouteId = this.getAttribute('data-route-id');
             const icon = this.querySelector('.icon-bookmark');
