@@ -132,13 +132,14 @@ def profile(request):
         selected_color = request.POST.get("selectedColorInput")
         is_change_profile = False
 
+
         # renew User's Avatar
         if avatar:
             user.avatar = avatar
             user.selected_icon = None
             user.selected_color = None
             is_change_profile = True
-        elif user.selected_icon:
+        else:
             user.avatar = None
             user.selected_icon = selected_icon
             user.selected_color = selected_color
@@ -160,7 +161,6 @@ def profile(request):
                 return render(request, "diary/profile.html", {"user": user})
             else:
                 user.set_password(new_password)
-                user.save()
                 update_session_auth_hash(request, user) # renew user's session
                 messages.success(request, "Password updated successfully.")
 
