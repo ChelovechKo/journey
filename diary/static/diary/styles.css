@@ -321,7 +321,7 @@ h2 {
     cursor: pointer;
     width: 30px;
     height: 30px;
-    visibility: hidden;
+    visibility: visible;
     transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 

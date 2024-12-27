@@ -2,7 +2,7 @@
 
 {% block body %}
 
-    <h2 id="page-header" class="d-flex align-items-center position-relative py-1">{{ route.name }}</h2>
+    <h2 id="page-header" class="d-flex align-items-center position-relative py-1 text-center">{{ route.name }}</h2>
 
     <!-- Map and Legend -->
     <div class="route-map-legend row g-0">
@@ -33,7 +33,7 @@
                             <!-- Input for Price -->
                             <div class="d-flex align-items-center gap-1">
                                 <span data-bs-toggle="tooltip" data-bs-placement="top" title="Price">💵</span>
-                                <input type="text" id="place-price" name="placePrice" class="form-control form-control-sm" style="width: 70px;">
+                                <input type="text" id="place-price" name="placePrice" class="form-control form-control-sm w-100">
                             </div>
 
                             <div id="place-longlat" class="small text-nowrap ms-auto"></div>
@@ -62,12 +62,12 @@
                         <!-- Date & Time -->
                         <div class="group-item">
                             <label class="me-1">Visit Date:</label>
-                            <input type="datetime-local" id="place-datetime-picker" class="form-control w-auto" name="placeDt">
+                            <input type="datetime-local" id="place-datetime-picker" class="form-control w-100" name="placeDt">
                         </div>
             
                         <!-- Description -->
                         <div class="group-item">
-                            <textarea id="place-description" class="form-control" rows="3" placeholder="Enter description here..." name="placeDescription"></textarea>
+                            <textarea id="place-description" class="form-control w-100" rows="3" placeholder="Enter description here..." name="placeDescription"></textarea>
                         </div>
                         
                         <!-- Place's Category -->
@@ -88,17 +88,6 @@
 
                 <div class="group-content hidden" route-id="{{ route.id }}" id="route-details">
                     <!-- Route Properties -->
-                    <!--<div class="d-flex flex-row justify-content-center gap-2 mb-3">
-                         Route Type
-                        <div class="d-flex align-items-center">
-                            <select id="route-type" class="form-select form-select-sm w-auto">
-                                <option value="driving">🚗 Driving</option>
-                                <option value="walking">🚶 Walking</option>
-                                <option value="cycling">🚴 Cycling</option>
-                            </select>
-                        </div>
-                    </div>-->
-
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <!-- Left-aligned Circular Route -->
                         <div class="d-flex align-items-center justify-content-start gap-1">
@@ -139,28 +128,28 @@
                     </div>
 
                     <!-- Route Points -->
-                    <div id="route-points">
+                    <div id="route-points" class="mt-2">
                         {% if places %}
                             {% for place in places %}
-                                <div class="point-item card mb-1 shadow-sm"
+                                <div class="point-item card mb-2 shadow-sm"
                                      data-point-id="{{ place.id }}"
                                      data-latitude="{{ place.latitude }}"
                                      data-longitude="{{ place.longitude }}"
                                      data-is-visited="{{ place.isVisited }}"
                                      data-price="{{ place.price }}"
                                      data-order="{{ place.order }}">
-                                    <div class="card-body d-flex align-items-center gap-2 position-relative">
+                                    <div class="card-body d-flex align-items-center gap-2">
                                         <!-- Order number -->
-                                        <span class="badge bg-info position-absolute top-0 start-0">
+                                        <span class="badge bg-info">
                                             {{ place.order }}
                                         </span>
                                         <!-- Categories icon and name -->
-                                        <div class="d-flex align-items-center w-100 gap-2 p-2">
+                                        <div class="flex-grow-1 d-flex flex-column">
                                             <span class="icon-category">{{ place.icon }}</span>
                                             <h6 class="card-title mb-0">{{ place.name }}</h6>
                                         </div>
                                         <!-- Delete button -->
-                                        <button type="button" class="btn btn-link text-secondary position-absolute top-0 end-0">
+                                        <button type="button" class="btn btn-link text-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -175,37 +164,19 @@
         </div>
 
         <!-- Map -->
-        <div class="col-md-7 col-12" id="map-container">
-            <div id="map">
+        <div class="col-md-9 col-12" id="map-container">
+            <div id="map" style="min-height: 300px;">
                 <button id="legend-toggle-btn" class="btn btn-outline-secondary btn-sm"
                         data-bs-toggle="tooltip" 
                         data-bs-placement="left" 
-                        title="Hide Map Legend">
-                    <i class="fa fa-chevron-right"></i>
+                        title="Show Map Legend">
+                    <i class="fa fa-chevron-left"></i>
                 </button>
             </div>
         </div>
 
         <!-- Map Legend (Sidebar) -->
-        <div class="col-md-2 col-12 bg-light sidebar legend" id="map-legend">
-
-            <!-- My Places -->
-            <!--<div class="sidebar-group">
-                <h5>My Places</h5>
-
-                 <div class="checkbox-container">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="visited">
-                        <label class="form-check-label" for="visited">Visited</label>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="planned">
-                        <label class="form-check-label" for="planned">Planned</label>
-                    </div>
-                 </div>
-
-            </div>-->
-
+        <div class="col-md-2 col-12 bg-light sidebar legend hidden" id="map-legend">
             <!-- Categories -->
             {% for category in categories %}
                 <div class="sidebar-group">

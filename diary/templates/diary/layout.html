@@ -24,7 +24,7 @@
     
         <!-- CSRF Token for JavaScript -->
         <meta name="csrf-token" content="{{ csrf_token }}">
-    
+
         <style>
             @media (max-width: 768px) {
                 .navbar-brand {
@@ -81,7 +81,7 @@
                                     {% if user.avatar %}
                                         <!-- Users's avatar -->
                                         <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle"
-                                             style="object-fit: cover; margin-right: 10px;">
+                                             style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
                                     {% elif user.selected_icon %}
                                         <i class="{{ user.selected_icon }} fa-2x" style="color: {{ user.selected_color }}; margin-right: 10px;"></i>
                                     {% else %}

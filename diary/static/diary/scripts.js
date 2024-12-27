@@ -74,7 +74,7 @@ function myPlaces(){
     const routeId = routeDetails.getAttribute("route-id");
     let userMapMarkers = [];
 
-    let isLegendVisible = true;
+    let isLegendVisible = false;
     let hideTimeout;
 
     // get route's data
@@ -825,7 +825,9 @@ function myPlaces(){
     }
 
     //Hide/Show Map Legend Handle
-    function hideShowMapLegend(){
+    function hideShowMapLegend(e){
+        e.stopPropagation();
+
         const mapContainer = document.getElementById('map-container');
         const tooltipInstance = bootstrap.Tooltip.getInstance(LegendToggleBtn);
 
