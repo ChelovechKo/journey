@@ -66,6 +66,7 @@ class Route(models.Model):
     isDraft = models.BooleanField(default=False)  # True - is Draft, False - is Done
     isPublished = models.BooleanField(default=False)  # True - is Published, False - is not
     likes_count = models.PositiveIntegerField(default=0)
+    bookmarks_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.id}-{self.name}"

@@ -1205,6 +1205,8 @@ function routeDetailsPage(){
             return;
         }
 
+        const rdBookmarksCnt = document.getElementById('rd-bookmarks-cnt');
+
         // Send request to toggle like
         fetch(`/toggle_bookmark/${routeId}/`, {
             method: 'POST',
@@ -1227,6 +1229,9 @@ function routeDetailsPage(){
                 } else {
                     rdBookmarkButton.classList.replace('bi-bookmark-fill', 'bi-bookmark');
                 }
+
+                // Update bookmarks count
+                rdBookmarksCnt.textContent = `${data.bookmarks_count}`;
             })
             .catch(error => {
                 console.error('Error toggling bookmark on route (click_rdBookmarkButton): ', error);
@@ -1552,6 +1557,11 @@ function routeDetailsPage(){
         });
     }
 
+    if (isAuthenticated) {
+        rdLikeButton.addEventListener('click', click_rdLikeButton);
+        rdBookmarkButton.addEventListener('click', click_rdBookmarkButton);
+    }
+
     // Apply changes button
     if (isOwner) {
         rdStarsRatingButton.classList.remove('no-interaction');
@@ -1590,10 +1600,6 @@ function routeDetailsPage(){
         rdDeleteRouteButton.style.display = 'none';
         confirmDeleteButton.style.display = 'none';
         rdPointsEditButton.style.display = 'none';
-        if (isAuthenticated) {
-            rdLikeButton.addEventListener('click', click_rdLikeButton);
-            rdBookmarkButton.addEventListener('click', click_rdBookmarkButton);
-        }
     }
 
     rdRoutePoints.addEventListener('mouseover', mouse_over_rdPoint);
@@ -1664,6 +1670,7 @@ function routes(){
 
             const selectedRouteId = this.getAttribute('data-route-id');
             const icon = this.querySelector('.icon-bookmark');
+            const bookmarkCountSpan = this.querySelector('small');
 
             // Send request to toggle like
             fetch(`/toggle_bookmark/${selectedRouteId}/`, {
@@ -1681,6 +1688,9 @@ function routes(){
                         return;
                     }
 
+                    // Update bookmarks count
+                    bookmarkCountSpan.textContent = `${data.bookmarks_count}`;
+
                     // Update icon based on the new liked state
                     if (data.bookmarked) {
                         icon.classList.replace('bi-bookmark', 'bi-bookmark-fill');
@@ -1690,6 +1700,14 @@ function routes(){
                         if (document.querySelector('h2').textContent.trim() === 'My Bookmarks') {
                             const routeCard = document.querySelector(`.route-card[data-route-id="${selectedRouteId}"]`);
                             if (routeCard) {
+                                const tooltips = routeCard.querySelectorAll('[data-bs-toggle="tooltip"]');
+                                tooltips.forEach(tooltipElement => {
+                                    const tooltipInstance = bootstrap.Tooltip.getInstance(tooltipElement);
+                                    if (tooltipInstance) {
+                                        tooltipInstance.dispose();
+                                    }
+                                });
+
                                 routeCard.remove();
                             }
 

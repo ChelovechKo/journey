@@ -17,30 +17,29 @@
                                 {% if route.isDraft %} bg-secondary {% elif route.isPublished %} bg-primary {% else %} bg-success{% endif %}">
                                 {% if route.isDraft %}Draft{% elif route.isPublished %}Published{% else %}Saved{% endif %}
                             </span>
-                            
-                            {% if not route.is_owner%}
-                                <!-- Route's bottom-left LIKE badge -->
-                                <div class="position-absolute bottom-0 start-0 m-2 routes-like-route-btn"
+
+                            <!-- Route's bottom-left LIKE badge -->
+                            <div class="position-absolute bottom-0 start-0 m-2 routes-like-route-btn"
+                                    data-route-id="{{ route.id }}">
+                                <i class="bi {% if route.liked_by_current_user %}bi-heart-fill{% else %} bi-heart {% endif %} icon-heart"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="top"
+                                   title="Like">
+                                </i>
+                                <small class="text-muted">{{ route.likes_count }}</small>
+                            </div>
+
+                            <!-- Route's top-right BOOKMARK badge -->
+                            {% if user.is_authenticated %}
+                                <div class="position-absolute top-0 end-0 routes-bookmark-route-btn"
                                         data-route-id="{{ route.id }}">
-                                    <i class="bi {% if route.liked_by_current_user %}bi-heart-fill{% else %} bi-heart {% endif %} icon-heart"
+                                    <i class="bi {% if route.bookmarked_by_current_user %}bi-bookmark-fill{% else %} bi-bookmark {% endif %} icon-bookmark"
                                        data-bs-toggle="tooltip"
                                        data-bs-placement="top"
-                                       title="Like">
+                                       title="Bookmark">
                                     </i>
-                                    <small class="text-muted">{{ route.likes_count }}</small>
+                                    <small class="text-muted">{{ route.bookmarks_count }}</small>
                                 </div>
-                                
-                                <!-- Route's top-right BOOKMARK badge -->
-                                {% if user.is_authenticated %}
-                                    <div class="position-absolute top-0 end-0 routes-bookmark-route-btn"
-                                            data-route-id="{{ route.id }}">
-                                        <i class="bi {% if route.bookmarked_by_current_user %}bi-bookmark-fill{% else %} bi-bookmark {% endif %} icon-bookmark"
-                                           data-bs-toggle="tooltip"
-                                           data-bs-placement="top"
-                                           title="Bookmark">                                    
-                                        </i>
-                                    </div>
-                                {% endif %}
                             {% endif %}
 
                             <div class="card-body mt-4">
@@ -125,7 +124,7 @@
             </div>
         </div>
     </div>
-    
+
     <div id="is-authenticated" data-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"></div>
 
 {% endblock %}

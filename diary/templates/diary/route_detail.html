@@ -41,32 +41,33 @@
                     {% if route.isPublished %}Published{% elif not route.isDraft %}Saved{% endif %}
                 </button>
             </div>
-        {% else %}
-            <div class="position-absolute top-0 end-0">
+        {% endif %}
+    </h2>
+
+    <div class="row vh-100">
+        <!-- Points Column (9/12) -->
+        <div class="col-md-9 position-relative">
+            <div class="position-absolute top-0 end-0 me-2">
                 <i id="rd-like-route-btn"
                    class="bi {% if route.liked_by_current_user %}bi-heart-fill{% else %} bi-heart {% endif %} icon-heart"
+                   style="font-size: 1.5rem;"
                    data-bs-toggle="tooltip"
                    data-bs-placement="top"
                    title="Like">
                 </i>
                 <small class="text-muted" id="rd-likes-cnt">{{ route.likes_count }}</small>
-
+    
                 {% if user.is_authenticated %}
                     <i id = "rd-bookmark-route-btn"
                        class="bi {% if route.bookmarked_by_current_user %}bi-bookmark-fill{% else %} bi-bookmark {% endif %} icon-bookmark"
+                       style="font-size: 1.5rem;"
                        data-bs-toggle="tooltip"
                        data-bs-placement="top"
                        title="Bookmark">
                     </i>
+                    <small class="text-muted" id="rd-bookmarks-cnt">{{ route.bookmarks_count }}</small>
                 {% endif %}
             </div>
-        {% endif %}
-
-    </h2>
-
-    <div class="row vh-100">
-        <!-- Points Column (9/12) -->
-        <div class="col-md-9">
 
             <!-- Date's create -->
             <div class="d-flex align-items-center">

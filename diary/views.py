@@ -558,6 +558,11 @@ def toggle_bookmark(request, route_id):
     else:
         bookmarked = True
 
+    # Update the bookmark count on the post
+    route.bookmarks_count = route.bookmarks.count()
+    route.save()
+
     return JsonResponse({
-        'bookmarked': bookmarked
+        'bookmarked': bookmarked,
+        'bookmarks_count': route.bookmarks_count
     })
