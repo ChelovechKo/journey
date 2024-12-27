@@ -1472,7 +1472,7 @@ function routeDetailsPage(){
         rdStarsRatingButton.classList.remove('no-interaction');
         rdBootsDifficultyButton.classList.remove('no-interaction');
 
-        rdStatusToogleButton.disabled = false;
+        rdStatusToogleButton.style.display = 'block';
         rdCompletionToogleButton.style.display = 'block';
         rdNameEditButton.style.display = 'block';
         rdStartDateButton.disabled = false;
@@ -1498,7 +1498,7 @@ function routeDetailsPage(){
     else {
         rdStarsRatingButton.classList.add('no-interaction');
         rdBootsDifficultyButton.classList.add('no-interaction');
-        rdStatusToogleButton.disabled = true;
+        rdStatusToogleButton.style.display = 'none';
         rdCompletionToogleButton.style.display = 'none';
         rdNameEditButton.style.display = 'none';
         rdStartDateButton.disabled = true;

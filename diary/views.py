@@ -45,7 +45,7 @@ def format_duration(duration):
 
 
 def index(request):
-    return render(request, "diary/index.html")
+    return redirect('routes_view', view_type='all_routes')
 
 
 def login_view(request):
@@ -443,32 +443,6 @@ def route_detail(request, route_id):
     })
 
 
-def routes_view(request, view_type):
-    # what typ select
-    title = ''
-    if view_type == 'my_routes' and request.user.is_authenticated:
-        routes = Route.objects.filter(user=request.user).order_by('-created_at')
-        title = 'My Routes'
-    elif view_type == 'all_routes':
-        routes = Route.objects.filter(isPublished=True).order_by('-created_at')
-        title = 'All Routes'
-
-    processed_routes = []
-    for route in routes:
-        tmp_route = model_to_dict(route)
-        tmp_route['form_distance'] = format_distance(route.distance)
-        tmp_route['form_duration'] = format_duration(route.duration)
-        tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
-        tmp_route['user'] = model_to_dict(User.objects.get(id=route.user.id))
-        tmp_route['is_owner'] = request.user.is_authenticated and route.user.id == request.user.id
-        processed_routes.append(tmp_route)
-
-    return render(request, 'diary/routes.html', {
-        'routes': processed_routes,
-        'title': title,
-    })
-
-
 @login_required
 def apply_route_changes(request):
     if request.method == 'POST':
@@ -508,3 +482,28 @@ def delete_route(request, route_id):
         except Route.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Route not found.'})
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+
+def routes_view(request, view_type):
+    # what typ select
+    title = ''
+    if view_type == 'my_routes' and request.user.is_authenticated:
+        routes = Route.objects.filter(user=request.user).order_by('-created_at')
+        title = 'My Routes'
+    else:
+        routes = Route.objects.filter(isPublished=True).order_by('-created_at')
+        title = 'All Routes'
+
+    processed_routes = []
+    for route in routes:
+        tmp_route = model_to_dict(route)
+        tmp_route['form_distance'] = format_distance(route.distance)
+        tmp_route['form_duration'] = format_duration(route.duration)
+        tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
+        tmp_route['user'] = model_to_dict(User.objects.get(id=route.user.id))
+        tmp_route['is_owner'] = request.user.is_authenticated and route.user.id == request.user.id
+        processed_routes.append(tmp_route)
+
+    return render(request, 'diary/routes.html', {
+        'routes': processed_routes,
+        'title': title,
+    })
