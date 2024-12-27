@@ -24,6 +24,27 @@
     
         <!-- CSRF Token for JavaScript -->
         <meta name="csrf-token" content="{{ csrf_token }}">
+    
+        <style>
+            @media (max-width: 768px) {
+                .navbar-brand {
+                    font-size: 1.2rem;
+                }
+                .navbar-nav .nav-link {
+                    font-size: 0.9rem;
+                }
+                .rounded-circle {
+                    width: 30px;
+                    height: 30px;
+                }
+                .navbar-text {
+                    font-size: 0.9rem;
+                }
+                .container-fluid {
+                    padding: 0 15px;
+                }
+            }
+        </style>
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -45,7 +66,7 @@
                         <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'all_routes' %}">🌍 All Routes</a></li>
                         {% if user.is_authenticated %}
                             <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'my_bookmarks' %}">📌 Bookmarks</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'my_routes' %}">🗂️ My Routes</a></li>                            
+                            <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'my_routes' %}">🗂️ My Routes</a></li>
                             <li class="nav-item"><a class="nav-link" href="{% url 'my-places' %}">🗺️ New Route</a></li>
                         {% endif %}
                     </ul>
@@ -60,7 +81,7 @@
                                     {% if user.avatar %}
                                         <!-- Users's avatar -->
                                         <img src="{{ user.avatar.url }}" alt="Avatar" class="rounded-circle"
-                                             style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                                             style="object-fit: cover; margin-right: 10px;">
                                     {% elif user.selected_icon %}
                                         <i class="{{ user.selected_icon }} fa-2x" style="color: {{ user.selected_color }}; margin-right: 10px;"></i>
                                     {% else %}
