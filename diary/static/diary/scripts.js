@@ -2,6 +2,7 @@ let editingPlaceId = null;
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const toggleButtons = document.querySelectorAll(".btn-toggle");
 const messageBlock = document.getElementById('message-block');
+let userMarker = null;
 
 // Collapse SidebarGroup
 function collapseSidebarGroup(button){
@@ -379,6 +380,9 @@ function myPlaces(){
         document.getElementById("place-isVisited").checked = false;
         document.getElementById("place-details").classList.add("hidden");
         placeForm.classList.add('d-none');
+        if (userMarker) {
+            map.removeLayer(userMarker);
+        }
     }
 
     // Add point to route
@@ -795,7 +799,7 @@ function myPlaces(){
                 marker.bindTooltip(place.name, {permanent: false, direction: "top", offset: [0, -10] });
 
                 // Marker Click Handle
-                marker.on('click', () => {displayPlaceInfo(place);});
+                marker.on('click', () => displayPlaceInfo(place, true));
                 marker.addTo(map);
                 markers.push(marker);
             });
@@ -878,6 +882,35 @@ function myPlaces(){
 
     // Map Handle
     map.on("moveend", () => {updateMapWithOSMData();});
+
+    // Map click
+    map.on('click', async (e) => {
+        const { lat, lng } = e.latlng;
+        if (userMarker) {
+            map.removeLayer(userMarker);
+        }
+
+        const isMarkerHere = userMapMarkers.some(marker => {
+            const markerLatLng = marker.getLatLng();
+            return markerLatLng.lat === lat && markerLatLng.lng === lng;
+        });
+
+        if (!isMarkerHere) {
+            const icon = L.AwesomeMarkers.icon({ prefix: 'fa', icon: 'map-marker', markerColor: 'red' });
+            const marker = L.marker([lat, lng], {icon: icon });
+
+            marker.on('click', () => displayPlaceInfo({
+                lat: lat,
+                lng: lng,
+                name: "Unknown Location",
+                category: { country: null, city: null, countryCode: null }
+            }, true));
+
+            marker.addTo(map);
+            userMarker = marker;
+            marker.fire('click');
+        }
+    });
 
     // Reset the existing route and clean route details
     if (window.currentRoute) {
