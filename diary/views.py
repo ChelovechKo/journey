@@ -14,7 +14,8 @@ from datetime import datetime
 import json
 import requests
 
-from .models import User, Place, MarkerSubCategory, MarkerCategory, Route, Like
+from .models import User, Place, MarkerSubCategory, MarkerCategory, Route, Like, Bookmark
+
 
 def format_distance(distance):
     if not distance:
@@ -418,6 +419,7 @@ def route_detail(request, route_id):
     tmp_route['form_duration'] = format_duration(route.duration)
     tmp_route['price'] = tmp_route['price'] if tmp_route['price'] else 0
     tmp_route['liked_by_current_user'] = request.user.is_authenticated and route.likes.filter(user=request.user).exists()
+    tmp_route['bookmarked_by_current_user'] = request.user.is_authenticated and route.bookmarks.filter(user=request.user).exists()
 
     places = {}
     # get route's places
@@ -473,6 +475,7 @@ def apply_route_changes(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
+
 @login_required
 def delete_route(request, route_id):
     if request.method == "DELETE":
@@ -484,12 +487,17 @@ def delete_route(request, route_id):
             return JsonResponse({'success': False, 'error': 'Route not found.'})
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
 
+
 def routes_view(request, view_type):
     # what typ select
     title = ''
     if view_type == 'my_routes' and request.user.is_authenticated:
         routes = Route.objects.filter(user=request.user).order_by('-created_at')
         title = 'My Routes'
+    elif view_type == 'my_bookmarks' and request.user.is_authenticated:
+        bookmarks = Bookmark.objects.filter(user=request.user).select_related('route')
+        routes = [bookmark.route for bookmark in bookmarks]
+        title = 'My Bookmarks'
     else:
         routes = Route.objects.filter(isPublished=True).order_by('-created_at')
         title = 'All Routes'
@@ -503,14 +511,12 @@ def routes_view(request, view_type):
         tmp_route['user'] = model_to_dict(User.objects.get(id=route.user.id))
         tmp_route['is_owner'] = request.user.is_authenticated and route.user.id == request.user.id
         tmp_route['liked_by_current_user'] = request.user.is_authenticated and route.likes.filter(user=request.user).exists()
+        tmp_route['bookmarked_by_current_user'] = request.user.is_authenticated and route.bookmarks.filter(user=request.user).exists()
         processed_routes.append(tmp_route)
-
-    is_owner = request.user.is_authenticated and route.user == request.user
 
     return render(request, 'diary/routes.html', {
         'routes': processed_routes,
-        'title': title,
-        'is_owner': is_owner
+        'title': title
     })
 
 @login_required
@@ -535,4 +541,23 @@ def toggle_like(request, route_id):
     return JsonResponse({
         'liked': liked,
         'likes_count': route.likes_count
+    })
+
+@login_required
+def toggle_bookmark(request, route_id):
+    """ bookmark/unbookmark for a route"""
+    route = Route.objects.get(id=route_id)
+    user = request.user
+    bookmarked = False
+
+    bookmark, created = Bookmark.objects.get_or_create(user=user, route=route)
+
+    if not created:
+        bookmark.delete()
+        bookmarked = False
+    else:
+        bookmarked = True
+
+    return JsonResponse({
+        'bookmarked': bookmarked
     })

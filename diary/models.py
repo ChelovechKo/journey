@@ -116,3 +116,16 @@ class Like(models.Model):
 
     def __str__(self):
         return f"Like(id={self.id}, user={self.user}, route={self.route})"
+
+
+class Bookmark(models.Model):
+    """Model to store bookmarks for routes."""
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookmarks")
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="bookmarks")
+
+    class Meta:
+        unique_together = ('user', 'route')  # Prevent duplicate bookmarks for the same user and route
+
+    def __str__(self):
+        return f"Bookmark(id={self.id}, user={self.user.username}, route={self.route.id})"

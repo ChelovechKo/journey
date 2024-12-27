@@ -1148,6 +1148,7 @@ function routeDetailsPage(){
     const rdBootsDifficultyButton = document.getElementById('rd-difficulty-rating-btn');
     const rdPointsEditButton = document.getElementById('rd-points-edit-btn');
     const rdLikeButton = document.getElementById('rd-like-route-btn');
+    const rdBookmarkButton = document.getElementById('rd-bookmark-route-btn');
 
     const confirmDeleteButton = document.getElementById('confirmDeleteRoute');
 
@@ -1155,8 +1156,7 @@ function routeDetailsPage(){
     const boots = document.querySelectorAll('#rd-difficulty-rating-btn .boot');
 
     function click_rdLikeButton(){
-        const icon = this.querySelector('.icon-heart');
-        const likeCountSpan = this.querySelector('small');
+        const rdLikesCnt = document.getElementById('rd-likes-cnt');
 
         // Send request to toggle like
         fetch(`/toggle_like/${routeId}/`, {
@@ -1176,19 +1176,47 @@ function routeDetailsPage(){
 
                 // Update icon based on the new liked state
                 if (data.liked) {
-                    icon.classList.remove('bi-heart');
-                    icon.classList.add('bi-heart-fill');
+                    rdLikeButton.classList.replace('bi-heart', 'bi-heart-fill');
                 } else {
-                    icon.classList.remove('bi-heart-fill');
-                    icon.classList.add('bi-heart');
+                    rdLikeButton.classList.replace('bi-heart-fill', 'bi-heart');
                 }
 
                 // Update like count
-                likeCountSpan.textContent = `${data.likes_count}`;
+                rdLikesCnt.textContent = `${data.likes_count}`;
             })
             .catch(error => {
                 console.error('Error toggling like on route (click_rdLikeButton): ', error);
                 showMessage('danger', 'An error occurred while toggling like on route.');
+            });
+    }
+
+    function click_rdBookmarkButton(){
+        // Send request to toggle like
+        fetch(`/toggle_bookmark/${routeId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error toggling bookmark on route (click_rdBookmarkButton): ', data.error);
+                    showMessage('danger', 'An error occurred while toggling bookmark on route.');
+                    return;
+                }
+
+                // Update icon based on the new liked state
+                if (data.bookmarked) {
+                    rdBookmarkButton.classList.replace('bi-bookmark', 'bi-bookmark-fill');
+                } else {
+                    rdBookmarkButton.classList.replace('bi-bookmark-fill', 'bi-bookmark');
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling bookmark on route (click_rdBookmarkButton): ', error);
+                showMessage('danger', 'An error occurred while toggling bookmark on route.');
             });
     }
 
@@ -1520,7 +1548,6 @@ function routeDetailsPage(){
         rdDeleteRouteButton.style.display = 'block';
         confirmDeleteButton.style.display = 'block';
         rdPointsEditButton.style.display = 'block';
-
         rdNameEditButton.addEventListener('click', click_rdNameEditButton);
         rdStatusToogleButton.addEventListener('click', click_rdStatusToogleButton);
         rdCompletionToogleButton.addEventListener('click', click_rdCompletionToogleButton);
@@ -1546,6 +1573,7 @@ function routeDetailsPage(){
         confirmDeleteButton.style.display = 'none';
         rdPointsEditButton.style.display = 'none';
         rdLikeButton.addEventListener('click', click_rdLikeButton);
+        rdBookmarkButton.addEventListener('click', click_rdBookmarkButton);
     }
 
     rdRoutePoints.addEventListener('mouseover', mouse_over_rdPoint);
@@ -1555,6 +1583,7 @@ function routeDetailsPage(){
 // Routes Cards
 function routes(){
     const routeLikeButtons = document.querySelectorAll('.routes-like-route-btn');
+    const routeBookmarkButtons = document.querySelectorAll('.routes-bookmark-route-btn');
 
     routeLikeButtons.forEach(button => {
         button.addEventListener('click', function (e) {
@@ -1582,11 +1611,9 @@ function routes(){
 
                     // Update icon based on the new liked state
                     if (data.liked) {
-                        icon.classList.remove('bi-heart');
-                        icon.classList.add('bi-heart-fill');
+                        icon.classList.replace('bi-heart', 'bi-heart-fill');
                     } else {
-                        icon.classList.remove('bi-heart-fill');
-                        icon.classList.add('bi-heart');
+                        icon.classList.replace('bi-heart-fill', 'bi-heart');
                     }
 
                     // Update like count
@@ -1595,6 +1622,62 @@ function routes(){
                 .catch(error => {
                     console.error('Error toggling like on route (routeLikeButtons): ', error);
                     showMessage('danger', 'An error occurred while toggling like on route.');
+                });
+        });
+    });
+
+    routeBookmarkButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.stopPropagation(); // Prevent event bubbling to parent elements
+
+            const selectedRouteId = this.getAttribute('data-route-id');
+            const icon = this.querySelector('.icon-bookmark');
+
+            // Send request to toggle like
+            fetch(`/toggle_bookmark/${selectedRouteId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error toggling bookmark on route (routeBookmarkButtons): ', data.error);
+                        showMessage('danger', 'An error occurred while toggling bookmark on route.');
+                        return;
+                    }
+
+                    // Update icon based on the new liked state
+                    if (data.bookmarked) {
+                        icon.classList.replace('bi-bookmark', 'bi-bookmark-fill');
+                    } else {
+                        icon.classList.replace('bi-bookmark-fill', 'bi-bookmark');
+
+                        if (document.querySelector('h2').textContent.trim() === 'My Bookmarks') {
+                            const routeCard = document.querySelector(`.route-card[data-route-id="${selectedRouteId}"]`);
+                            if (routeCard) {
+                                routeCard.remove();
+                            }
+
+                            // Если закладок не осталось, показываем сообщение
+                            if (!document.querySelector('.route-card')) {
+                                const noBookmarksMessage = `
+                                    <div class="col-12">
+                                        <p class="text-center text-muted">
+                                            There are no bookmarks. <a href="/routes/all_routes/" class="text-primary">Start searching for routes to add them to your bookmarks!</a>
+                                        </p>
+                                    </div>`;
+                                const routesContainer = document.querySelector('.row');
+                                routesContainer.innerHTML = noBookmarksMessage;
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error toggling bookmark on route (routeBookmarkButtons): ', error);
+                    showMessage('danger', 'An error occurred while toggling bookmark on route.');
                 });
         });
     });

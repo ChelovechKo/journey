@@ -25,7 +25,7 @@
         </span>
 
         <!-- Badge on top-right of the title (Published/Saved) -->
-    
+
         {% if is_owner %}
             <div class="position-absolute top-0 end-0">
                 <button
@@ -37,17 +37,29 @@
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
                         title="Click to toggle status">
-                    
+
                     {% if route.isPublished %}Published{% elif not route.isDraft %}Saved{% endif %}
                 </button>
             </div>
         {% else %}
-            <div class="position-absolute top-0 end-0" id = "rd-like-route-btn">
-                <i class="bi {% if route.liked_by_current_user %}bi-heart-fill{% else %} bi-heart {% endif %} icon-heart"></i>
-                <small class="text-muted">{{ route.likes_count }}</small>
+            <div class="position-absolute top-0 end-0">
+                <i id = "rd-like-route-btn"
+                   class="bi {% if route.liked_by_current_user %}bi-heart-fill{% else %} bi-heart {% endif %} icon-heart"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   title="Like">
+                </i>
+                <small class="text-muted" id="rd-likes-cnt">{{ route.likes_count }}</small>
+
+                <i id = "rd-bookmark-route-btn"
+                   class="bi {% if route.bookmarked_by_current_user %}bi-bookmark-fill{% else %} bi-bookmark {% endif %} icon-bookmark"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   title="Bookmark">
+                </i>
             </div>
         {% endif %}
-        
+
     </h2>
 
     <div class="row vh-100">

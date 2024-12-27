@@ -28,7 +28,10 @@
     <body>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container-fluid">
-                <a class="navbar-brand">Nomad's Diary</a>
+                <a class="navbar-brand d-flex align-items-center" href="{% url 'index' %}">
+                    <img src="{% static 'logo.png' %}" alt="Logo" width="30" height="30" class="d-inline-block align-top me-1">
+                    Nomad's Diary
+                </a>
 
                 <!-- Toggler for mobile version -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -39,10 +42,11 @@
                 <!-- Navigation -->
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'all_routes' %}">All Routes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'all_routes' %}">🌍 All Routes</a></li>
                         {% if user.is_authenticated %}
-                            <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'my_routes' %}">My Routes</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{% url 'my-places' %}">New Route</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'my_bookmarks' %}">📌 Bookmarks</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'routes_view' 'my_routes' %}">🗂️ My Routes</a></li>                            
+                            <li class="nav-item"><a class="nav-link" href="{% url 'my-places' %}">🗺️ New Route</a></li>
                         {% endif %}
                     </ul>
 
